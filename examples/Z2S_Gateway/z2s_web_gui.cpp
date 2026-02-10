@@ -835,6 +835,7 @@ const char* getZigbeeDataTypeName(uint8_t dataType)  {
 }
 
 //============================================================================
+//============================================================================
 void fillGatewayGeneralnformation(char *buf) {
 
 	if (buf) {
@@ -1184,9 +1185,9 @@ void buildCredentialsZabbix() {
 		(void*)GUI_CB_SAVE_FLAG);
 
 	//===========================================================
-//	auto cfg = Supla::Storage::ConfigInstance();
+	auto cfg = Supla::Storage::ConfigInstance();
   
-//	if (cfg) {
+	if (cfg) {
 
 //  	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
 //  	if (cfg->getWiFiSSID(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
@@ -1201,7 +1202,7 @@ void buildCredentialsZabbix() {
 //			ESPUI.updateText(Supla_email, general_purpose_gui_buffer);
 
 //		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level == 2 ? 1 : 0);
-//	}			
+	}
 }
 //============================================================================
 //============================================================================
@@ -1325,6 +1326,7 @@ void buildZigbeeTabGUI() {
 		force_leave_switcher, force_leave_global_flag ? 1 : 0);
 }
 
+//============================================================================
 void rebuildDevicesSelector() {
 
 	for (uint8_t devices_counter = 0; 
@@ -1610,8 +1612,7 @@ void rebuildChannelsSelector(
 		channelSelectorCallback(ESPUI.getControl(channel_selector), SL_VALUE);
 }
 
-/*****************************************************************************/
-
+//============================================================================
 void buildChannelsTabGUI() {
 
 	char *working_str_ptr = PSTR("Zigbee channels");
@@ -3717,6 +3718,9 @@ void Z2S_reloadWebGUI() {
 
 }
 
+//============================================================================
+// START
+//============================================================================
 void Z2S_startWebGUIConfig() {
 
 	//char general_purpose_gui_buffer[1024] = {};
@@ -3755,48 +3759,48 @@ void Z2S_startWebGUIConfig() {
 		Control::Color::Emerald, Control::noParent, textCallback);
 
 	wifi_pass_text = ESPUI.addControl(Control::Type::Text, 
-																		"Password", 
-																		working_str, 
-																		Control::Color::Emerald, 
-																		Control::noParent, textCallback);
+															"Password", 
+															working_str, 
+															Control::Color::Emerald, 
+															Control::noParent, textCallback);
 
 	ESPUI.setInputType(wifi_pass_text, PSTR("password"));
 
 	Supla_server = ESPUI.addControl(Control::Type::Text, 
-																	PSTR("Supla server"), 
-																	working_str, 
-																	Control::Color::Emerald, 
-																	Control::noParent, 
-																	textCallback);
+															PSTR("Supla server"), 
+															working_str, 
+															Control::Color::Emerald, 
+															Control::noParent, 
+															textCallback);
 
 	Supla_email = ESPUI.addControl(Control::Type::Text, 
-																 "Supla email",
-																 working_str, 
-																 Control::Color::Emerald, 
-																 Control::noParent, 
-																 textCallback);
+															"Supla email",
+															working_str, 
+															Control::Color::Emerald, 
+															Control::noParent, 
+															textCallback);
 
 	
 	Supla_skip_certificate_switcher = ESPUI.addControl(Control::Type::Switcher, 
-																										 PSTR("Skip CA certificate check"), 
-																										 (long int)0,
-																										 Control::Color::Emerald, 
-																										 Control::noParent, 
-																										 generalCallback);
+															PSTR("Skip CA certificate check"), 
+															(long int)0,
+															Control::Color::Emerald, 
+															Control::noParent, 
+															generalCallback);
 
 	Zabbix_server = ESPUI.addControl(Control::Type::Text, 
-																	PSTR("Zabbix server"), 
-																	working_str, 
-																	Control::Color::Emerald, 
-																	Control::noParent, 
-																	textCallback);
+															PSTR("Zabbix server"), 
+															working_str, 
+															Control::Color::Emerald, 
+															Control::noParent, 
+															textCallback);
 
 	auto gui_mode_selector = ESPUI.addControl(Control::Type::Select, 
-									 												  PSTR("Select GUI mode (requires restart)"), 
-																		 				(long int)(long int)0, 
-																		 				Control::Color::Emerald, 
-																		 				Control::noParent, 
-																		 				selectGuiModeCallback);
+									 						PSTR("Select GUI mode (requires restart)"), 
+															(long int)(long int)0, 
+															Control::Color::Emerald, 
+															Control::noParent, 
+															selectGuiModeCallback);
 
 	for (uint8_t modes_counter = no_gui_mode; modes_counter < gui_modes_number; 
 	     modes_counter++) {
@@ -3867,7 +3871,9 @@ void Z2S_startWebGUIConfig() {
 	ESPUI.begin("ZIGBEE <=> SUPLA CONFIG PAGE");
 	GUIstarted = true;
 }
+//============================================================================
 
+//============================================================================
 void Z2S_startWebGUI() {
 
   log_i("STOP WEB GUI");
@@ -3880,6 +3886,7 @@ void Z2S_startWebGUI() {
 	handleGatewayEvent(Z2S_SUPLA_EVENT_ON_GUI_STARTED);
 }
 
+//============================================================================
 void Z2S_stopWebGUI() {
 	
 	log_i("STOP WEB GUI");
@@ -4101,12 +4108,12 @@ void Z2S_loopWebGUI() {
 	}
 }
 
+//============================================================================
 void enterWifiDetailsCallback(Control *sender, int type, void *param) {
 
 	if ((type == B_UP) && data_ready) {
-		
-    auto cfg = Supla::Storage::ConfigInstance();
-
+	
+		auto cfg = Supla::Storage::ConfigInstance();
 		if (cfg) {
 
 			cfg->setWiFiSSID(ESPUI.getControl(wifi_ssid_text)->getValueCstr());
@@ -4125,6 +4132,7 @@ void enterWifiDetailsCallback(Control *sender, int type, void *param) {
 	}
 }
 
+//============================================================================
 void textCallback(Control *sender, int type) {
 		
 		if ((ESPUI.getControl(wifi_ssid_text)->getValue().length() > 0) &&
@@ -4139,6 +4147,7 @@ void textCallback(Control *sender, int type) {
 		}
 }
 
+//============================================================================
 void generalCallback(Control *sender, int type) {
 	
 	/*Serial.print("CB: id(");
@@ -4151,17 +4160,18 @@ void generalCallback(Control *sender, int type) {
 	//Serial.println(sender->getValue());
 }
 
+//============================================================================
 void onZigbeeTabCallback(Control *sender, int type) {
-	
 	ESPUI.updateNumber(pairing_mode_switcher, Zigbee.isNetworkOpen() ? 1 : 0);
 	ESPUI.updateNumber(force_leave_switcher, force_leave_global_flag ? 1 : 0);	
 }
 
+//============================================================================
 void onChannelsTabCallback(Control *sender, int type) {
-	
 }
 
 
+//============================================================================
 void generalMinMaxCallback(Control *sender, int type, void* param) {
 	
 	Serial.print("CB: id(");
@@ -4175,6 +4185,7 @@ void generalMinMaxCallback(Control *sender, int type, void* param) {
 		ESPUI.updateNumber(sender->GetId(), max_value);
 }
 
+//============================================================================
 void endpointCallback(Control *sender, int type) {
 	
 	Serial.print("CB: id(");
