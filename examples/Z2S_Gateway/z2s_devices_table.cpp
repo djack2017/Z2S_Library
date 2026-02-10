@@ -3702,6 +3702,9 @@ void Z2S_onOnOffReceive(
   no_channel_found_error_func(ieee_addr_str);
 }
 
+//============================================================================
+// ELECTRICAL
+//============================================================================
 void Z2S_onElectricalMeasurementReceive(
   esp_zb_ieee_addr_t ieee_addr, uint16_t endpoint, uint16_t cluster, 
   const esp_zb_zcl_attribute_t *attribute) {
@@ -3710,7 +3713,7 @@ void Z2S_onElectricalMeasurementReceive(
 
   ieee_addr_to_str(ieee_addr_str, ieee_addr);
 
-  log_i("%s, endpoint 0x%x, attribute id 0x%x, size %u", 
+  printf("%s, endpoint 0x%x, attribute id 0x%x, size %u\n", 
         ieee_addr_str, endpoint, attribute->id, attribute->data.size);
 
   int16_t channel_number_slot = Z2S_findChannelNumberSlot(
@@ -3719,14 +3722,14 @@ void Z2S_onElectricalMeasurementReceive(
 
   if (channel_number_slot < 0) {
     
-    log_e("no electricity meter channel found for address %s", ieee_addr_str);
+    printf("no electricity meter channel found for address %s\n", ieee_addr_str);
 
     return;
   }
 
   if (attribute->data.value == nullptr) {
       
-    log_e("missing data value for address %s", ieee_addr_str);
+    printf("missing data value for address %s\n", ieee_addr_str);
 
     return;
   }
@@ -3734,7 +3737,7 @@ void Z2S_onElectricalMeasurementReceive(
   if (z2s_channels_table[channel_number_slot].model_id ==
       Z2S_DEVICE_DESC_LUMI_SMART_WALL_OUTLET) {
 
-    log_i("LumiEM active - skipping EM attribute reporting");
+    printf("LumiEM active - skipping EM attribute reporting\n");
 
     return;
   }
@@ -3833,9 +3836,10 @@ void Z2S_onElectricalMeasurementReceive(
     } break;
   }
 }
+//============================================================================
+//============================================================================
 
-/******************************************************************************/
-
+//============================================================================
 void Z2S_onMultistateInputReceive(
   esp_zb_ieee_addr_t ieee_addr, uint16_t endpoint, uint16_t cluster, 
   const esp_zb_zcl_attribute_t *attribute) {
