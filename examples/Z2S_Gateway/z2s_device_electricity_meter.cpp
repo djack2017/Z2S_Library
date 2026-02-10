@@ -1,7 +1,6 @@
 #include "z2s_device_electricity_meter.h"
 
-/*---------------------------------------------------------------------------------------------------------------------------*/
-
+//============================================================================
 void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway, 
                                    zbg_device_params_t *device, 
                                    int16_t channel_number_slot) {
@@ -108,7 +107,6 @@ void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway,
       energy_divisor  = 100;
       
       ignore_zigbee_scaling = true;
-	  printf("Multiplier1: %i\n", voltage_multiplier);
     } break;
 
 
@@ -129,7 +127,6 @@ void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway,
       energy_divisor  = 100;
       
       ignore_zigbee_scaling = true;
-      printf("Multiplier2: %i\n", voltage_multiplier);
     } break;
 
 
@@ -169,8 +166,6 @@ void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway,
       energy_divisor  = 1000;
 
       ignore_zigbee_scaling = true;
-      printf("Multiplier3: %i\n", voltage_multiplier);
-
     } break;
 
     case Z2S_DEVICE_DESC_TUYA_DIN_BREAKER_EM_TEMP: {
@@ -188,8 +183,6 @@ void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway,
       energy_divisor  = 100;
 
       ignore_zigbee_scaling = true;
-      printf("Multiplier4: %i\n", voltage_multiplier);
-
     } break;
 
     case Z2S_DEVICE_DESC_DEVELCO_RELAY_ELECTRICITY_METER: {
@@ -204,8 +197,6 @@ void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway,
       active_power_divisor    = 1000;*/
 
       ignore_zigbee_scaling = false;
-      printf("Multiplier5: %i\n", voltage_multiplier);
-
     } break;
 
 
@@ -225,7 +216,6 @@ void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway,
 
       energy_multiplier = 1;
       energy_divisor  = 1000;
-      printf("Multiplier6: %i\n", voltage_multiplier);
     } break;
 
 
@@ -298,8 +288,6 @@ void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway,
       log_i("EM channel extended data successfully CREATED");
   }
   
-  printf("Multiplier7: %i\n", voltage_multiplier);
-
   Supla_Z2S_ElectricityMeter->setIgnoreZigbeeScaling(ignore_zigbee_scaling);
 
   Supla_Z2S_ElectricityMeter->setCurrentMultiplierModifier(current_multiplier_modifier);
@@ -321,8 +309,7 @@ void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway,
   Supla_Z2S_ElectricityMeter->setEnergyDivisor(energy_divisor, false);
 }
 
-/*---------------------------------------------------------------------------------------------------------------------------*/
-
+//============================================================================
 void addZ2SDeviceElectricityMeter(
   ZigbeeGateway *gateway, zbg_device_params_t *device, bool isTuya, 
   bool active_query, uint8_t free_slot, int8_t sub_id, bool one_phase) {
@@ -344,8 +331,7 @@ void addZ2SDeviceElectricityMeter(
     (uint8_t*)&channel_extended_data_em);
 }
 
-/*---------------------------------------------------------------------------------------------------------------------------*/
-
+//============================================================================
 void updateZ2SDeviceElectricityMeter(int16_t channel_number_slot) {
 
   channel_extended_data_em_t channel_extended_data_em = {};
@@ -361,8 +347,7 @@ void updateZ2SDeviceElectricityMeter(int16_t channel_number_slot) {
     log_i("EM channel extended data successfully UPDATED (counters zeroed)"); 
 }
 
-/*---------------------------------------------------------------------------------------------------------------------------*/
-
+//============================================================================
 void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot, 
                                   uint8_t emv_selector, 
                                   int64_t em_value) {
@@ -379,6 +364,7 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
         Supla_ElectricityMeter->pong();
         
         log_i("selector 0x%x, value %lld", emv_selector, em_value);
+        printf("selector 0x%x, value %lld\n", emv_selector, em_value);
         
         switch (emv_selector) {
           
@@ -538,3 +524,4 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
         }
     }
 }
+//============================================================================
