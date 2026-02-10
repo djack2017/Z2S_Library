@@ -1188,10 +1188,9 @@ void buildCredentialsZabbix() {
 	auto cfg = Supla::Storage::ConfigInstance();
   
 	if (cfg) {
-
-//  	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-//  	if (cfg->getWiFiSSID(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
-//			ESPUI.updateText(wifi_ssid_text, general_purpose_gui_buffer);
+		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+		if (cfg->getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+			ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
 			
 //		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
 //		if (cfg->getSuplaServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
