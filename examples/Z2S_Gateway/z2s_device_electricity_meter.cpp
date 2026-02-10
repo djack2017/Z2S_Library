@@ -364,17 +364,20 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
         Supla_ElectricityMeter->pong();
         
 //      log_i("selector 0x%x, value %lld", emv_selector, em_value);
-        printf("selector 0x%x, value %lld\n", emv_selector, em_value);
+//        printf("selector 0x%x, value %lld\n", emv_selector, em_value);
         
         switch (emv_selector) {
           
           case Z2S_EM_VOLTAGE_A_SEL: 		//0x0000
-            Supla_ElectricityMeter->setVoltage2(0, em_value); break;
+			printf("selector 0x%x, value %lld\n", emv_selector, em_value);
+			Supla_ElectricityMeter->setVoltage2(0, em_value); break;
 
           case Z2S_EM_CURRENT_A_SEL: 		//0x0001
-              Supla_ElectricityMeter->setCurrent2(0, abs(em_value)); break;
+			printf("selector 0x%x, value %lld\n", emv_selector, em_value);
+            Supla_ElectricityMeter->setCurrent2(0, abs(em_value)); break;
 
           case Z2S_EM_ACTIVE_POWER_A_SEL:	//0x0002
+			printf("selector 0x%x, value %lld\n", emv_selector, em_value);
             Supla_ElectricityMeter->setPowerActive2(0, em_value); break;
 
           case Z2S_EM_ACT_FWD_ENERGY_A_SEL: //0x0003
@@ -429,6 +432,7 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
 
 
           case Z2S_EM_AC_FREQUENCY: 		//0x0030
+			printf("selector 0x%x, value %lld\n", emv_selector, em_value);
             Supla_ElectricityMeter->setFreq2(em_value); break;
 
           case Z2S_EM_AC_VOLTAGE_MUL_SEL: 

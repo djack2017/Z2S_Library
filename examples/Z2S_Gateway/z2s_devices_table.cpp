@@ -3713,8 +3713,8 @@ void Z2S_onElectricalMeasurementReceive(
 
   ieee_addr_to_str(ieee_addr_str, ieee_addr);
 
-  printf("%s, endpoint 0x%x, attribute id 0x%x, size %u\n", 
-        ieee_addr_str, endpoint, attribute->id, attribute->data.size);
+//  printf("%s, endpoint 0x%x, attribute id 0x%x, size %u\n", 
+//        ieee_addr_str, endpoint, attribute->id, attribute->data.size);
 
   int16_t channel_number_slot = Z2S_findChannelNumberSlot(
     ieee_addr, endpoint, cluster, SUPLA_CHANNELTYPE_ELECTRICITY_METER, 
