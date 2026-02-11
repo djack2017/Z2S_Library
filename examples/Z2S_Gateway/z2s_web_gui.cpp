@@ -1231,12 +1231,9 @@ void buildCredentialsZabbix() {
 		(void*)GUI_CB_SAVE_FLAG);
 
 	//===========================================================
-	auto myCfg = Supla::Storage::ConfigInstance();
   
 	if (myCfg) {
 		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-//		if (myCfg->getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
-//			ESPUI.updateText(zabbix_server_text, general_purpose_gui_buffer);
 		if (myCfg.getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0) {
 			ESPUI.updateText(zabbix_server_text, general_purpose_gui_buffer);
 		}	
