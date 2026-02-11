@@ -493,11 +493,11 @@ public:
 
 	bool getZabbixServer(char* buffer) {
 		if (strlen(zabbixServer) == 0) return false;
-		strncpy(buffer, zabbixServer, 63);
-		buffer[63] = '\0';
+		strncpy(buffer, zabbixServer, sizeof(zabbixServer)-1);
+		buffer[sizeof(zabbixServer)-1] = '\0';
 		return true;
 	}
-	
+
 //    const char* getZabbixServer() const {
 //        return zabbixServer;
 //    }
@@ -1235,8 +1235,11 @@ void buildCredentialsZabbix() {
   
 	if (myCfg) {
 		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-		if (myCfg->getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+//		if (myCfg->getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+//			ESPUI.updateText(zabbix_server_text, general_purpose_gui_buffer);
+		if (myCfg.getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0) {
 			ESPUI.updateText(zabbix_server_text, general_purpose_gui_buffer);
+		}	
 	}
 }
 //============================================================================
