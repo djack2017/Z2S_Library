@@ -3888,7 +3888,7 @@ void Z2S_startWebGUIConfig() {
 		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level);
 	}
 	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-	if (myCfg->getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+	if (myCfg.getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 		ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
 
 	working_str = _enable_gui_on_start;
