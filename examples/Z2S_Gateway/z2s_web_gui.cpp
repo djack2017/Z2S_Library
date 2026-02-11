@@ -62,7 +62,7 @@ uint16_t wifi_pass_text;
 uint16_t Supla_server;
 uint16_t Supla_email;
 uint16_t Supla_skip_certificate_switcher;
-uint16_t Zabbix_server;
+//uint16_t Zabbix_server;
 uint16_t save_button;
 uint16_t save_label;
 
@@ -476,6 +476,44 @@ static constexpr char* clearFlagsLabelStyle PROGMEM =
 	"font-weight: normal;";
 
 //
+
+//===================================================================================
+Preferences prefs;  // obiekt do obsługi pamięci flash
+
+class MyConfig {
+private:
+    char zabbixServer[64];
+
+public:
+    void setZabbixServer(const char* server) {
+        strncpy(zabbixServer, server, sizeof(zabbixServer) - 1);
+        zabbixServer[sizeof(zabbixServer) - 1] = '\0';
+    }
+
+    const char* getZabbixServer() const {
+        return zabbixServer;
+    }
+
+    // Zapis do pamięci flash
+    void save() {
+        prefs.begin("myconfig", false); // "myconfig" = namespace
+        prefs.putString("zabbixServer", zabbixServer);
+        prefs.end();
+    }
+
+    // Odczyt z pamięci flash
+    void load() {
+        prefs.begin("myconfig", true);
+        String saved = prefs.getString("zabbixServer", "");
+        prefs.end();
+        strncpy(zabbixServer, saved.c_str(), sizeof(zabbixServer) - 1);
+        zabbixServer[sizeof(zabbixServer) - 1] = '\0';
+    }
+};
+
+MyConfig myCfg;
+uint16_t zabbix_server_text;
+//===================================================================================
 
 static const char* myCustomJS = R"=====(
 function myFunction() {
@@ -1161,13 +1199,13 @@ void buildCredentialsGUI() {
 //============================================================================
 
 //============================================================================
-// ZABBIX Credentials
+// ZABBIX Config
 //============================================================================
 void buildCredentialsZabbix() {
 
 	//char general_purpose_gui_buffer[1024] = {};
 
-	char *working_str_ptr = PSTR("Zabbix credentials");
+	char *working_str_ptr = PSTR("Zabbix config");
 	auto wifitab = ESPUI.addControl(
 		Control::Type::Tab, PSTR(empty_str), working_str_ptr);
 		
@@ -1181,7 +1219,7 @@ void buildCredentialsZabbix() {
 	working_str_ptr = PSTR("Save");
 	save_button = ESPUI.addControl(
 		Control::Type::Button, PSTR("Save"), working_str_ptr, 
-		Control::Color::Emerald, wifitab, enterWifiDetailsCallback,
+		Control::Color::Emerald, wifitab, enterZabbixDetailsCallback,
 		(void*)GUI_CB_SAVE_FLAG);
 
 	//===========================================================
@@ -1191,16 +1229,6 @@ void buildCredentialsZabbix() {
 		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
 		if (cfg->getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
-			
-//		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-//		if (cfg->getSuplaServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
-//			ESPUI.updateText(Supla_server, general_purpose_gui_buffer);
-			
-//		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-//		if (cfg->getEmail(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
-//			ESPUI.updateText(Supla_email, general_purpose_gui_buffer);
-
-//		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level == 2 ? 1 : 0);
 	}
 }
 //============================================================================
@@ -4123,8 +4151,6 @@ void enterWifiDetailsCallback(Control *sender, int type, void *param) {
 				PSTR("security_level"), 
 				ESPUI.getControl(
 					Supla_skip_certificate_switcher)->getValueInt() > 0 ? 2 :0);
-			//cfg->setZabbixServer(ESPUI.getControl(Zabbix_server)->getValueCstr());
-
 			cfg->commit();
 			if ((uint32_t)param == GUI_CB_RESTART_FLAG) SuplaDevice.softRestart();
 		}
@@ -4132,6 +4158,18 @@ void enterWifiDetailsCallback(Control *sender, int type, void *param) {
 }
 
 //============================================================================
+void enterZabbixDetailsCallback(Control *sender, int type, void *param) {
+    if ((type == B_UP) && data_ready) {
+        auto cfg = Supla::Storage::ConfigInstance();
+        if (cfg) {
+            myCfg.setZabbixServer(ESPUI.getControl(zabbix_server_text)->getValueCstr());
+            myCfg.save();  // zapis do flash
+            cfg->commit();
+        }
+    }
+}
+//============================================================================
+
 void textCallback(Control *sender, int type) {
 		
 		if ((ESPUI.getControl(wifi_ssid_text)->getValue().length() > 0) &&
