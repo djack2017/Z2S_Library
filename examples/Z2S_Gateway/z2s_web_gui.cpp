@@ -3895,6 +3895,10 @@ void Z2S_startWebGUIConfig() {
 	ESPUI.updateSelect(gui_mode_selector, _enable_gui_on_start); 
 	ESPUI.updateNumber(gui_start_delay_number, _gui_start_delay);
 
+	printf("Supla server %s\n", Supla_server);
+	printf("EMAIL %s\n", Supla_email);
+	printf("Zabbix server %s\n", Zabbix_server);
+
 	ESPUI.begin("ZIGBEE <=> SUPLA CONFIG PAGE");
 	GUIstarted = true;
 }
