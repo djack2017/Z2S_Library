@@ -589,6 +589,7 @@ void updateDeviceInfoLabel(uint8_t device_slot);
 void gatewayCallback(Control *sender, int type, void *param);
 void selectGuiModeCallback(Control *sender, int type);
 void enterWifiDetailsCallback(Control *sender, int type, void *param);
+void enterZabbixDetailsCallback(Control *sender, int type, void *param);
 void textCallback(Control *sender, int type);
 void generalCallback(Control *sender, int type);
 void onZigbeeTabCallback(Control *sender, int type);
