@@ -479,8 +479,6 @@ static constexpr char* clearFlagsLabelStyle PROGMEM =
 //
 
 //===================================================================================
-Preferences prefs;  // obiekt do obsługi pamięci flash
-
 class MyConfig {
 private:
     char zabbixServer[64];
@@ -504,6 +502,7 @@ public:
 
     // Zapis do pamięci flash
     void save() {
+		Preferences prefs;
         prefs.begin("myconfig", false); // "myconfig" = namespace
         prefs.putString("zabbixServer", zabbixServer);
         prefs.end();
@@ -511,6 +510,7 @@ public:
 
     // Odczyt z pamięci flash
     void load() {
+		Preferences prefs;
         prefs.begin("myconfig", true);
         String saved = prefs.getString("zabbixServer", "");
         prefs.end();
@@ -1232,12 +1232,10 @@ void buildCredentialsZabbix() {
 
 	//===========================================================
   
-	if (myCfg) {
-		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-		if (myCfg.getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0) {
-			ESPUI.updateText(zabbix_server_text, general_purpose_gui_buffer);
-		}	
-	}
+	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+	if (myCfg.getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0) {
+		ESPUI.updateText(zabbix_server_text, general_purpose_gui_buffer);
+	}	
 }
 //============================================================================
 //============================================================================
