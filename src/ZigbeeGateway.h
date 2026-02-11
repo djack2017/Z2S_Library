@@ -22,7 +22,9 @@
       }                                                                                        \
   }
 
-#define ZBG_MAX_DEVICES 0x20 //32
+#define ZBG_MAX_DEVICES                                       0x20 //32
+
+#define GATEWAY_ENDPOINT_NUMBER                               1
 
 #define TUYA_PRIVATE_CLUSTER_0                                0xE000
 #define TUYA_PRIVATE_CLUSTER_1                                0xE001
@@ -59,6 +61,7 @@
 #define SONOFF_CUSTOM_CLUSTER_EXTERNAL_TEMPERATURE_INPUT      0x600D //INT16
 #define SONOFF_CUSTOM_CLUSTER_TEMPERATURE_SENSOR_SELECT       0x600E //U8
 #define SONOFF_CUSTOM_CLUSTER_TEMPERATURE_ACCURACY            0x6011 //S16
+#define SONOFF_CUSTOM_CLUSTER_TRVZB_PID_MODE                  0x6017 //8BITMAP
 /*SNZB-04P attributes*/
 #define SONOFF_CUSTOM_CLUSTER_TAMPER_ID                       0x2000 //U8
 /*SNZB-03P attributes*/
@@ -102,6 +105,8 @@
 #define LUMI_CUSTOM_CLUSTER_DISPLAY_UNIT_ID                   0x0114 //U8
 #define LUMI_CUSTOM_CLUSTER_AIR_QUALITY_ID                    0x0129 //U8
 
+
+
 #define LUMI_CUSTOM_CLUSTER_TRV_SYSTEM_MODE_ID                0x0271 //U8
 #define LUMI_CUSTOM_CLUSTER_TRV_PRESET_ID                     0x0272 //U8 manual: 0, auto: 1, away: 2
 #define LUMI_CUSTOM_CLUSTER_TRV_WINDOW_DETECTION_ID           0x0273 //U8
@@ -109,6 +114,16 @@
 #define LUMI_CUSTOM_CLUSTER_TRV_SENSOR_TYPE_ID                0x027E //
 #define LUMI_CUSTOM_CLUSTER_TRV_BATTERY_ID                    0x040A //
 #define LUMI_CUSTOM_CLUSTER_TRV_SCHEDULE_MODE_ID              0x027D //U8
+
+#define LUMI_CUSTOM_CLUSTER_SMOKE_ALARM_ID                    0x013A
+#define LUMI_CUSTOM_CLUSTER_SMOKE_DENSITY_ID                  0x013B
+#define LUMI_CUSTOM_CLUSTER_BUZZER_1_ID                       0x013E //U32
+#define LUMI_CUSTOM_CLUSTER_BUZZER_2_ID                       0x0126 //U8
+#define LUMI_CUSTOM_CLUSTER_BUZZER_MANUAL_MUTE_ID             0x0126 //U8
+#define LUMI_CUSTOM_CLUSTER_BUZZER_MANUAL_ALARM_ID            0x013D //U8
+#define LUMI_CUSTOM_CLUSTER_HEARTBEAT_INDICATOR_ID            0x013C //U8
+#define LUMI_CUSTOM_CLUSTER_SELFTEST_ID                       0x0127 //BOOL
+#define LUMI_CUSTOM_CLUSTER_LINKAGE_ALARM_ID                  0x014B //U8
 
 #define LUMI_CUSTOM_CLUSTER_FFF2_CMD_ID                       0xFFF2 //0x41
 
@@ -133,6 +148,23 @@
 #define LUMI_ATTRIBUTE_VOLTAGE_ID                             0x96 //ESP_ZB_ZCL_ATTR_TYPE_SINGLE
 #define LUMI_ATTRIBUTE_CURRENT_ID                             0x97 //ESP_ZB_ZCL_ATTR_TYPE_SINGLE
 #define LUMI_ATTRIBUTE_POWER_ID                               0x98 //ESP_ZB_ZCL_ATTR_TYPE_SINGLE
+
+#define LUMI_ATTRIBUTE_RSD_BATTERY_ID                         0x65 //U8
+
+#define LUMI_ATTRIBUTE_SMOKE_ID                               0x0A0 //U16
+#define LUMI_ATTRIBUTE_SMOKE_DENSITY_ID                       0x0A1 //U8
+#define LUMI_ATTRIBUTE_TEST_STATE_ID                          0x0A2 //U8
+#define LUMI_ATTRIBUTE_BUZZER_MANUAL_MUTE_ID                  0x0A3 //U8
+#define LUMI_ATTRIBUTE_HEARTBEAT_INDICATOR_ID                 0x0A4 //U8
+#define LUMI_ATTRIBUTE_LINKAGE_ALARM_ID                       0x0A5 //U8
+#define LUMI_ATTRIBUTE_BUZZER_MANUAL_MUTE_2_ID                0x126
+#define LUMI_ATTRIBUTE_TEST_STATE_2_ID                        0x127
+#define LUMI_ATTRIBUTE_SMOKE_2_ID                             0x13A
+#define LUMI_ATTRIBUTE_SMOKE_DENSITY_2_ID                     0x13B
+#define LUMI_ATTRIBUTE_HEARTBEAT_INDICATOR_2_ID               0x13C
+#define LUMI_ATTRIBUTE_BUZZER_MANUAL_ALARM_ID                 0x13D
+#define LUMI_ATTRIBUTE_LINKAGE_ALARM_2_ID                     0x14B
+#define LUMI_ATTRIBUTE_LINKAGE_ALARM_STATE_ID                 0x14C
 
 #define DEVELCO_CUSTOM_CLUSTER                                0xFC03
 #define DEVELCO_MANUFACTURER_CODE                             0x1015
@@ -304,6 +336,14 @@ public:
     zbg_device_params_t * device, uint16_t cluster_id, uint16_t attribute_id,
     uint8_t attribute_type, uint16_t min_interval, uint16_t max_interval, 
     uint16_t delta, bool ack, 
+    uint8_t direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
+    uint8_t disable_default_response = 1, uint8_t manuf_specific = 0, 
+    uint16_t manuf_code = 0);
+
+  bool setClusterReportingExt(
+    zbg_device_params_t * device, uint16_t cluster_id, uint16_t attribute_id,
+    uint8_t attribute_type, uint16_t min_interval, uint16_t max_interval, 
+    void *delta, bool ack, 
     uint8_t direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
     uint8_t disable_default_response = 1, uint8_t manuf_specific = 0, 
     uint16_t manuf_code = 0);
@@ -686,4 +726,5 @@ protected:
   std::list<zbg_device_params_t *> _gateway_devices;
 };
 
+extern ZigbeeGateway zbGateway;
 #endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

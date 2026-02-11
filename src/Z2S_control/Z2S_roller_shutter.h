@@ -21,6 +21,7 @@
 
 #include <supla/control/roller_shutter_interface.h>
 #include "ZigbeeGateway.h"
+#include "Z2S_common.h"
 
 #define Z2S_ROLLER_SHUTTER_FNC_WINDOW_COVERING_CLUSTER     0x00
 #define Z2S_ROLLER_SHUTTER_FNC_WINDOW_COVERING_CLUSTER_ALT 0x02
@@ -29,6 +30,8 @@
 #define Z2S_ROLLER_SHUTTER_FNC_MOES_COVER                  0x11
 #define Z2S_ROLLER_SHUTTER_FNC_CURRYSMARTER_COVER          0x12
 
+#define Z2S_ROLLER_SHUTTER_FNC_LUMI_ANALOG_MULTISTATE      0x20
+
 namespace Supla {
 namespace Control {
 class Z2S_RollerShutter : public RollerShutterInterface {
@@ -36,6 +39,11 @@ class Z2S_RollerShutter : public RollerShutterInterface {
   Z2S_RollerShutter(
     ZigbeeGateway *gateway, zbg_device_params_t *device, 
     uint8_t z2s_function = Z2S_ROLLER_SHUTTER_FNC_WINDOW_COVERING_CLUSTER);
+
+  void setZ2SZbDevice(z2s_zb_device_params_t *z2s_zb_device);
+  z2s_zb_device_params_t *getZ2SZbDevice();
+  void setZ2SChannel(z2s_device_params_t *z2s_channel);
+  z2s_device_params_t *getZ2SChannel();
 
   void onInit() override;
   void onTimer() override;
@@ -64,10 +72,14 @@ class Z2S_RollerShutter : public RollerShutterInterface {
   void rsStop();
   void rsMoveToLiftPercentage(uint8_t lift_percentage);
 
-  bool state = false;
-  ZigbeeGateway *_gateway = nullptr;
+  //ZigbeeGateway *_gateway = nullptr;
   zbg_device_params_t 	_device;
 
+  z2s_zb_device_params_t *_z2s_zb_device = nullptr;
+  z2s_device_params_t *_z2s_channel = nullptr;
+
+  bool state = false;
+  
   uint8_t _z2s_function = 
     Z2S_ROLLER_SHUTTER_FNC_WINDOW_COVERING_CLUSTER;
 
@@ -88,6 +100,7 @@ class Z2S_RollerShutter : public RollerShutterInterface {
   uint32_t _timeout_ms    = 60000;
   uint32_t _last_ping_ms  = 0;
   uint32_t _last_seen_ms  = 0;
+  uint32_t _update_rs_position_ms = 0;
  
 };
 

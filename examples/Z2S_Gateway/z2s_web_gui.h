@@ -20,6 +20,7 @@ typedef enum gui_modes {
   gateway_tcc_mode = 8,
   gateway_ca_tcc_mode = 9,
   gateway_devices_channels_mode = 10,
+  gateway_no_local_actions_mode = 11,
   gui_modes_number
 } gui_modes_t;
 
@@ -53,5 +54,10 @@ void GUI_onTuyaCustomClusterReceive(
   uint8_t command_id, uint16_t payload_size, uint8_t * payload_data);
 
 void GUI_onZigbeeOpenNetwork(bool is_network_open);
+
+void removeDevicesSelectorDevice(uint8_t device_slot);
+
+void removeChannelsSelectorChannel(
+  int16_t channel_number_slot, int32_t channel_option_id);
 
 #endif // Z2S_WEB_GUI_H_

@@ -38,7 +38,8 @@ void initZ2SDeviceVirtualRelay(
 
       case Z2S_DEVICE_DESC_LUMI_CURTAIN_DRIVER_1:
         
-        z2s_function = Z2S_ROLLER_SHUTTER_FNC_WINDOW_COVERING_CLUSTER_ALT; 
+        z2s_function = Z2S_ROLLER_SHUTTER_FNC_LUMI_ANALOG_MULTISTATE; 
+        z2s_rs_ignore_moving_direction = true;
       break;
 
 
@@ -76,6 +77,10 @@ void initZ2SDeviceVirtualRelay(
     
     Supla_Z2S_RollerShutter->setRSIgnoreMovingDirection(
       z2s_rs_ignore_moving_direction);
+    
+    Supla_Z2S_RollerShutter->setZ2SChannel(
+      Z2S_getChannelPtr(channel_number_slot));
+
   } else {  //VirtualRelay section
     
     uint8_t z2s_function = Z2S_VIRTUAL_RELAY_FNC_NONE;
@@ -92,6 +97,32 @@ void initZ2SDeviceVirtualRelay(
       case Z2S_DEVICE_DESC_TUYA_DP_RELAY: {
 
             z2s_function = Z2S_VIRTUAL_RELAY_FNC_TUYA_DP_RELAY; 
+      } break;
+
+
+      case Z2S_DEVICE_DESC_LUMI_SMOKE_DETECTOR: {
+
+        switch (z2s_channels_table[channel_number_slot].sub_id) {
+
+
+          case LUMI_SMOKE_DETECTOR_SELFTEST_SID: 
+            
+            z2s_function = Z2S_VIRTUAL_RELAY_FNC_LUMI_ATTRIBUTE_BOOL;
+          break;
+
+
+          case LUMI_SMOKE_DETECTOR_BUZZER_SID:
+
+            z2s_function = Z2S_VIRTUAL_RELAY_FNC_LUMI_BUZZER_1_2;
+          break;
+          
+
+          case LUMI_SMOKE_DETECTOR_LINKAGE_ALARM_SID:
+          case LUMI_SMOKE_DETECTOR_HEARTBEAT_INDICATOR_SID:
+            
+            z2s_function = Z2S_VIRTUAL_RELAY_FNC_LUMI_ATTRIBUTE_U8;
+          break;  
+        } 
       } break;
 
       
@@ -201,6 +232,9 @@ void initZ2SDeviceVirtualRelay(
     Supla_Z2S_VirtualRelay->setTimeoutSecs(
         z2s_channels_table[channel_number_slot].timeout_secs);
 
+    Supla_Z2S_VirtualRelay->setZ2SZbDevice(
+      Z2S_getChannelZbDevicePtr(channel_number_slot));
+
 
     switch (z2s_channels_table[channel_number_slot].model_id) {
 
@@ -279,6 +313,49 @@ void initZ2SDeviceVirtualRelay(
 
         Supla_Z2S_VirtualRelay->Z2S_setFunctionValueU8(
           TUYA_PRESENCE_SENSOR_ZYM10024GV3_FIND_SWITCH_DP);
+      break;
+
+
+      case Z2S_DEVICE_DESC_LUMI_SMOKE_DETECTOR:
+
+        switch (z2s_channels_table[channel_number_slot].sub_id) {
+
+
+          case LUMI_SMOKE_DETECTOR_SELFTEST_SID: {
+
+            Supla_Z2S_VirtualRelay->Z2S_setFunctionValueU32(
+              LUMI_CUSTOM_CLUSTER_SELFTEST_ID);
+
+            //Supla_Z2S_VirtualRelay->Z2S_setFunctionValueU8(1);
+            //Supla_Z2S_VirtualRelay->Z2S_setFunctionValueS8(0);
+          } break;
+
+
+          case LUMI_SMOKE_DETECTOR_BUZZER_SID:
+          break;
+
+
+          case LUMI_SMOKE_DETECTOR_HEARTBEAT_INDICATOR_SID: {
+
+            Supla_Z2S_VirtualRelay->Z2S_setFunctionValueU32(
+              LUMI_CUSTOM_CLUSTER_HEARTBEAT_INDICATOR_ID);
+
+            Supla_Z2S_VirtualRelay->Z2S_setFunctionValueU8(1);
+            Supla_Z2S_VirtualRelay->Z2S_setFunctionValueS8(0);
+          } break;
+
+
+          case LUMI_SMOKE_DETECTOR_LINKAGE_ALARM_SID: {
+
+            Supla_Z2S_VirtualRelay->Z2S_setFunctionValueU32(
+              LUMI_CUSTOM_CLUSTER_LINKAGE_ALARM_ID);
+
+            Supla_Z2S_VirtualRelay->Z2S_setFunctionValueU8(1);
+            Supla_Z2S_VirtualRelay->Z2S_setFunctionValueS8(0);
+          } break;
+        }
+
+      
       break;
     }
   }
@@ -437,6 +514,20 @@ void msgZ2SDeviceRollerShutter(
 
       case RS_CURRENT_POSITION_LIFT_PERCENTAGE_MSG:
 
+        if (Z2S_checkChannelFlags(
+          channel_number_slot, USER_DATA_FLAG_TRV_IGNORE_NEXT_MSG)) {
+          
+          if (z2s_channels_table[channel_number_slot].\
+              ignore_next_msg_counter == 0)
+            Z2S_clearChannelFlags(
+              channel_number_slot, USER_DATA_FLAG_TRV_IGNORE_NEXT_MSG);
+          else {
+
+            z2s_channels_table[channel_number_slot].ignore_next_msg_counter--;
+            return;
+          }
+        }
+        
         Supla_Z2S_RollerShutter->setRSCurrentPosition(msg_value); 
       break;
 

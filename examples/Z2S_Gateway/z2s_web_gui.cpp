@@ -9,7 +9,6 @@
 #include "z2s_device_virtual_relay.h"
 #include "z2s_device_local_action_handler.h"
 #include "TuyaDatapoints.h"
-#include <Preferences.h>
 
 #include "z2s_version_info.h"
 
@@ -23,7 +22,7 @@
 
 ESPAsyncHTTPUpdateServer updateServer;
 
-extern ZigbeeGateway zbGateway;
+//extern ZigbeeGateway zbGateway;
 
 extern bool force_leave_global_flag;
 
@@ -35,17 +34,26 @@ extern uint8_t _use_new_at_model;
 
 extern uint8_t _z2s_security_level;
 
-#define MAX_ATTRIBUTE_ID_SELECTOR_OPTIONS 24
-#define MAX_ATTRIBUTE_VALUE_SELECTOR_OPTIONS 6
+#define MAX_ATTRIBUTE_ID_SELECTOR_OPTIONS 			40
+#define MAX_ATTRIBUTE_VALUE_SELECTOR_OPTIONS 		5
+#define MAX_TUYA_DATAPOINTS_SELECTOR_OPTIONS 		15
 
 static volatile bool GUIstarted   = false;
-static volatile bool GUIbuilt	  = false;
+static volatile bool GUIbuilt	    = false;
 
-static volatile uint16_t _last_cluster_id = 0xFFFF;
-static volatile uint16_t _last_attribute_id = 0xFFFF;
-static volatile uint32_t _z2s_last_device_desc_id = 0;
+//static volatile uint16_t _last_cluster_id = 0xFFFF;
+//static volatile uint16_t _last_attribute_id = 0xFFFF;
+//static volatile uint32_t _z2s_last_device_desc_id = 0;
 
-static volatile uint32_t _dynamic_option_id = 0;
+static volatile uint16_t max_attribute_id_selector_options = 
+	MAX_ATTRIBUTE_ID_SELECTOR_OPTIONS;
+
+static volatile uint16_t max_attribute_value_selector_options =
+	MAX_ATTRIBUTE_VALUE_SELECTOR_OPTIONS;
+
+static volatile uint16_t max_Tuya_datapoints_selector_options =
+	MAX_TUYA_DATAPOINTS_SELECTOR_OPTIONS;
+
 
 //UI handles
 uint16_t gateway_general_info;
@@ -63,7 +71,6 @@ uint16_t wifi_pass_text;
 uint16_t Supla_server;
 uint16_t Supla_email;
 uint16_t Supla_skip_certificate_switcher;
-uint16_t Zabbix_server;
 uint16_t save_button;
 uint16_t save_label;
 
@@ -83,8 +90,7 @@ uint16_t factory_reset_switcher;
 uint16_t factory_reset_label;
 
 uint16_t devicestab;
-uint16_t device_selector;
-uint16_t device_selector_main_option;
+uint16_t device_selector = 0xFFFF;
 uint16_t zb_device_info_label;
 uint16_t device_status_label;
 uint16_t device_name_text; 
@@ -136,20 +142,13 @@ enum clusters_attributes_controls {
 uint16_t clusters_attributes_table[device_last_enum_position];
 
 uint16_t device_attribute_id_selector_first_option_id = 0xFFFF;
-//uint16_t device_attribute_id_selector_last_option_id  = 0xFFFF;
-
 uint16_t device_attribute_value_selector_first_option_id = 0xFFFF;
-//uint16_t device_attribute_value_selector_last_option_id  = 0xFFFF;	
 
-//uint16_t remove_device_button;
 uint16_t remove_device_and_channels_button;
 uint16_t remove_all_devices_button;
 
-uint16_t main_channel_option;
-
-uint16_t channel_selector;
+uint16_t channel_selector = 0xFFFF;
 uint16_t channel_selector_first_option_id = 0xFFFF;
-//uint16_t channel_selector_last_option_id  = 0xFFFF;
 uint16_t channel_status_label;
 uint16_t zb_channel_info_label; 
 uint16_t zb_channel_timings_label;
@@ -181,7 +180,7 @@ uint16_t refresh_save_button;
 uint16_t remove_channel_button;
 uint16_t lah_status_label;
 
-uint16_t advanced_device_selector;
+uint16_t advanced_device_selector = 0xFFFF;
 uint16_t advanced_device_info_label;
 
 uint16_t valve_program_selector;
@@ -232,8 +231,7 @@ Tuya_device_last_enum_position
 };
 
 uint16_t Tuya_devices_tab_controls_table[Tuya_device_last_enum_position];
-uint16_t Tuya_devices_id_selector_first_option_id = 0xFFFF;
-//uint16_t Tuya_devices_id_selector_last_option_id  = 0xFFFF;
+uint16_t Tuya_datapoint_id_selector_first_option_id = 0xFFFF;
 
 uint16_t table_first_button;
 uint16_t table_next_button;
@@ -247,7 +245,6 @@ uint16_t action_source_channel_selector 			 = 0xFFFF;
 uint16_t action_destination_channel_selector	 = 0xFFFF;
 uint16_t action_event_selector;
 uint16_t action_action_selector; 
-//uint16_t action_condition_selector;
 uint16_t action_condition_threshold_1_number;
 uint16_t action_condition_threshold_2_number; 
 uint16_t action_save_button;
@@ -257,16 +254,9 @@ uint16_t action_new_button;
 uint16_t action_copy_button;
 uint16_t action_remove_button;
 uint16_t action_state_label;
-//uint16_t action_source_channel_selector_first_option_id = 0xFFFF;
-//uint16_t action_source_channel_selector_last_option_id  = 0xFFFF;
-//uint16_t action_destination_channel_selector_first_option_id = 0xFFFF;
-//uint16_t action_destination_channel_selector_last_option_id	= 0xFFFF;
 
-//uint8_t	 attribute_id_selector_options_count = 0;
-//uint16_t attribute_id_selector_options[MAX_ATTRIBUTE_ID_SELECTOR_OPTIONS];
-
-//uint8_t	 attribute_value_selector_options_count = 0;
-//uint16_t attribute_value_selector_options[MAX_ATTRIBUTE_VALUE_SELECTOR_OPTIONS];
+uint16_t action_source_channel_selector_first_option_id = 0xFFFF;
+uint16_t action_destination_channel_selector_first_option_id = 0xFFFF;
 
 volatile bool data_ready = false;
 
@@ -280,43 +270,43 @@ volatile uint8_t	remove_all_devices_counter = 2;
 #define GUI_COMMAND_DEVICE_NAME_CHANGE		10
 #define GUI_COMMAND_CHANNEL_NAME_CHANGE		11
 
-#define GUI_COMMAND_CLUSTER_ID_CHANGE		34
+#define GUI_COMMAND_CLUSTER_ID_CHANGE			34
 #define GUI_COMMAND_ATTRIBUTE_ID_CHANGE		35
 
-#define GUI_BUILD_CONTROL_FLAG_GATEWAY 		0x0001
+#define GUI_BUILD_CONTROL_FLAG_GATEWAY 			0x0001
 #define GUI_BUILD_CONTROL_FLAG_CREDENTIALS 	0x0002
-#define GUI_BUILD_CONTROL_FLAG_ZIGBEE 		0x0004
-#define GUI_BUILD_CONTROL_FLAG_DEVICES 		0x0008
-#define GUI_BUILD_CONTROL_FLAG_CHANNELS 	0x0010
-#define GUI_BUILD_CONTROL_FLAG_ACTIONS 		0x0020
-#define GUI_BUILD_CONTROL_FLAG_CA 			0x0040
-#define GUI_BUILD_CONTROL_FLAG_AD 			0x0080
-#define GUI_BUILD_CONTROL_FLAG_TCC 			0x0100
+#define GUI_BUILD_CONTROL_FLAG_ZIGBEE 			0x0004
+#define GUI_BUILD_CONTROL_FLAG_DEVICES 			0x0008
+#define GUI_BUILD_CONTROL_FLAG_CHANNELS 		0x0010
+#define GUI_BUILD_CONTROL_FLAG_ACTIONS 			0x0020
+#define GUI_BUILD_CONTROL_FLAG_CA 					0x0040
+#define GUI_BUILD_CONTROL_FLAG_AD 					0x0080
+#define GUI_BUILD_CONTROL_FLAG_TCC 					0x0100
 
 volatile uint32_t gui_build_control_flags = 0x00;
 
 
 volatile uint8_t controls_enabled_flags = 0xFF;
 
-#define DEVICES_CONTROLS_ENABLED_FLAG 				0x01
-#define CLUSTERS_ATTRIBUTES_CONTROLS_ENABLED_FLAG	0x02
-#define CHANNELS_CONTROLS_ENABLED_FLAG 				0x04
-#define TUYA_DEVICES_ENABLED_FLAG					0x08
+#define DEVICES_CONTROLS_ENABLED_FLAG 															0x01
+#define CLUSTERS_ATTRIBUTES_CONTROLS_ENABLED_FLAG 									0x02
+#define CHANNELS_CONTROLS_ENABLED_FLAG 															0x04
+#define TUYA_DEVICES_ENABLED_FLAG																		0x08
 
 volatile uint32_t advanced_device_present_flags = 0x00;
 
-#define SONOFF_VALVE_PRESENT_FLAG					0x01
-#define TUYA_GAS_DETECTOR_PRESENT_FLAG				0x02
-#define MOES_ALARM_PRESENT_FLAG						0x04
+#define SONOFF_VALVE_PRESENT_FLAG																		0x01
+#define TUYA_GAS_DETECTOR_PRESENT_FLAG															0x02
+#define MOES_ALARM_PRESENT_FLAG																			0x04
 
 bool isSonoffValvePresent 		= false;
-bool isTuyaGasDetectorPresent 	= false;
-bool isMoesAlarmPresent			= false;
+bool isTuyaGasDetectorPresent = false;
+bool isMoesAlarmPresent				= false;
 
 volatile bool channels_selector_build_required = true;
 
 volatile uint16_t custom_cmd_tsn = 0;
-volatile uint8_t  Tuya_custom_cmd_dp = 0xFF;
+volatile uint8_t 	Tuya_custom_cmd_dp = 0xFF;
 volatile uint16_t current_Tuya_payload_label = 0;
 
 volatile int16_t current_action_counter = -1;
@@ -326,13 +316,13 @@ volatile int16_t current_action_id = -1;
 volatile ActionGUIState current_action_gui_state = VIEW_ACTION;
 volatile ActionGUIState previous_action_gui_state = VIEW_ACTION;
 
-#define GUI_CB_ENABLE_GUI_FLAG			0x0100
-#define GUI_CB_FORCE_CONFIG_FLAG		0x0101
-#define GUI_CB_GUI_DELAY_FLAG			0x0102
-#define GUI_CB_SAVE_MDNS_NAME_FLAG		0x0103
-#define GUI_CB_REBUILD_CHANNELS_FLAG	0x0104
-#define GUI_CB_USE_NEW_AT_FLAG			0x0105
-#define GUI_CB_GUI_RESTART_FLAG			0x0106
+#define GUI_CB_ENABLE_GUI_FLAG										0x0100
+#define GUI_CB_FORCE_CONFIG_FLAG									0x0101
+#define GUI_CB_GUI_DELAY_FLAG											0x0102
+#define GUI_CB_SAVE_MDNS_NAME_FLAG								0x0103
+#define GUI_CB_REBUILD_CHANNELS_FLAG							0x0104
+#define GUI_CB_USE_NEW_AT_FLAG										0x0105
+#define GUI_CB_GUI_RESTART_FLAG										0x0106
 
 
 #define GUI_CB_SAVE_FLAG													0x1000
@@ -478,50 +468,6 @@ static constexpr char* clearFlagsLabelStyle PROGMEM =
 
 //
 
-//===================================================================================
-class MyConfig {
-private:
-    char zabbixServer[64];
-
-public:
-    void setZabbixServer(const char* server) {
-        strncpy(zabbixServer, server, sizeof(zabbixServer) - 1);
-        zabbixServer[sizeof(zabbixServer) - 1] = '\0';
-    }
-
-	bool getZabbixServer(char* buffer) {
-		if (strlen(zabbixServer) == 0) return false;
-		strncpy(buffer, zabbixServer, sizeof(zabbixServer)-1);
-		buffer[sizeof(zabbixServer)-1] = '\0';
-		return true;
-	}
-
-//    const char* getZabbixServer() const {
-//        return zabbixServer;
-//    }
-
-    // Zapis do pamięci flash
-    void save() {
-		Preferences prefs;
-        prefs.begin("myconfig", false); // "myconfig" = namespace
-        prefs.putString("zabbixServer", zabbixServer);
-        prefs.end();
-    }
-
-    // Odczyt z pamięci flash
-    void load() {
-		Preferences prefs;
-        prefs.begin("myconfig", true);
-        String saved = prefs.getString("zabbixServer", "");
-        prefs.end();
-        strncpy(zabbixServer, saved.c_str(), sizeof(zabbixServer) - 1);
-        zabbixServer[sizeof(zabbixServer) - 1] = '\0';
-    }
-};
-
-MyConfig myCfg;
-//===================================================================================
-
 static const char* myCustomJS = R"=====(
 function myFunction() {
 	/*var a = document.createElement('a');
@@ -554,8 +500,8 @@ document.addEventListener("mouseup", function(e){
 	console.log(e.target.getAttribute("id"));
 	console.log(e.target.id);
 
-	if(e.target.id == "btn31") {
-		console.log("btn31");
+	if(e.target.id == "btn32") {
+		console.log("btn32");
 		e.stopImmediatePropagation();
     myFunction();
   }
@@ -565,8 +511,8 @@ document.addEventListener("touchend", function(e){
 	console.log(e.target.getAttribute("id"));	
 	console.log(e.target.id);
 
-	if(e.target.id == "btn31") {
-		console.log("btn31");
+	if(e.target.id == "btn32") {
+		console.log("btn32");
 		e.stopImmediatePropagation();
     myFunction();
   }
@@ -584,7 +530,6 @@ const char* getZigbeeDataTypeName(uint8_t dataType);
 
 void buildGatewayTabGUI();
 void buildCredentialsGUI();
-void buildCredentialsZabbix();
 void buildZigbeeTabGUI();
 void buildDevicesTabGUI();
 void buildChannelsTabGUI();
@@ -593,12 +538,11 @@ void buildTuyaCustomClusterTabGUI();
 
 void updateChannelInfoLabel(
 	uint8_t label_number, int16_t channel_slot = -2);
-void updateDeviceInfoLabel();
+void updateDeviceInfoLabel(uint8_t device_slot);
 
 void gatewayCallback(Control *sender, int type, void *param);
 void selectGuiModeCallback(Control *sender, int type);
 void enterWifiDetailsCallback(Control *sender, int type, void *param);
-void enterZabbixDetailsCallback(Control *sender, int type, void *param);
 void textCallback(Control *sender, int type);
 void generalCallback(Control *sender, int type);
 void onZigbeeTabCallback(Control *sender, int type);
@@ -651,26 +595,125 @@ void clusterCallbackCmd();
 
 void rebuildTuyaDevicesDatapointsList(uint8_t Tuya_device_slot);
 
+void buildAllChannelSelectors();
+
 void fillGatewayGeneralnformation(char *buf);
 void fillMemoryUptimeInformation(char *buf);
 
-//============================================================================
-uint32_t getNextDynamicOptionId() {
+/*****************************************************************************/
+
+/*uint32_t getNextDynamicOptionId() {
 
 	return _dynamic_option_id++;
+}*/
+
+uint16_t getMaxClusterAttributesNumber() {
+
+	uint16_t prev_cluster = 0xFFFF;
+	uint16_t desc_counter = 0;
+	uint16_t max_counter = 0;
+
+	for (uint16_t i = 0; 
+			 i < sizeof(zigbee_attributes)/sizeof(zigbee_attributes[0]);
+			 i++) {
+
+		if (zigbee_attributes[i].zigbee_attribute_cluster_id != prev_cluster) {
+			if (prev_cluster != 0xFFFF)
+				log_i(
+			"Cluster %04X, counter %u", prev_cluster, desc_counter);
+			prev_cluster = zigbee_attributes[i].zigbee_attribute_cluster_id;
+			if (desc_counter > max_counter)
+				max_counter = desc_counter;
+			desc_counter = 1;
+		} else desc_counter++;
+	}
+	if (desc_counter > max_counter)
+		max_counter = desc_counter;
+
+	log_i("max counter = %u", max_counter);
+	
+	return max_counter;
 }
 
-//============================================================================
+uint16_t getMaxAttributeValuesNumber() {
+
+	uint32_t prev_desc = 0;
+	uint16_t desc_counter = 0;
+	uint16_t prev_cluster = 0xFFFF;
+	uint16_t max_counter = 0;
+
+	for (uint16_t i = 0; 
+			 i < sizeof(zigbee_attribute_values)/sizeof(zigbee_attribute_values[0]);
+			 i++) {
+
+		if ((zigbee_attribute_values[i].zigbee_attribute_id != prev_desc) ||
+		    (zigbee_attribute_values[i].zigbee_cluster_id != prev_cluster)) {
+			if (prev_desc != 0)
+				log_i(
+			"Attribute id %lu, cluster %04X, counter %u", prev_desc, prev_cluster,
+			desc_counter);
+			prev_desc = zigbee_attribute_values[i].zigbee_attribute_id;
+			prev_cluster = zigbee_attribute_values[i].zigbee_cluster_id;
+			if (desc_counter > max_counter)
+				max_counter = desc_counter;
+			desc_counter = 1;
+		} else desc_counter++;
+	}
+	
+	if (desc_counter > max_counter)
+		max_counter = desc_counter;
+
+	log_i("max counter = %u", max_counter);
+	
+	return max_counter;
+}
+
+
+uint16_t getMaxTuyaDatapointsNumber() {
+
+	uint32_t prev_desc = 0;
+	uint16_t desc_counter = 0;
+	uint16_t max_counter = 0;
+
+	for (uint16_t i = 0; i < sizeof(Tuya_datapoints)/sizeof(Tuya_datapoints[0]);
+			 i++) {
+	
+		if (Z2S_hasZbDevice(Tuya_datapoints[i].z2s_device_desc_id)) {
+			if (Tuya_datapoints[i].z2s_device_desc_id != prev_desc) {
+				
+				if (prev_desc != 0)
+					log_i("Device id %lu, counter %u", prev_desc, desc_counter);
+				
+				prev_desc = Tuya_datapoints[i].z2s_device_desc_id;
+				
+				if (desc_counter > max_counter)
+					max_counter = desc_counter;
+				
+				desc_counter = 1;
+
+			} else desc_counter++;
+		}
+	}
+
+	if (desc_counter > max_counter)
+		max_counter = desc_counter;
+
+	log_i("max counter = %u", max_counter);
+
+	return max_counter;
+}
+
+/*****************************************************************************/
+
 void addEmptyLineLabel(uint16_t parent_id) {
 
 	ESPUI.setElementStyle(
-		ESPUI.addControl(
-			Control::Type::Label, PSTR(empty_str), empty_str,
-			Control::Color::None, parent_id), 
+			ESPUI.addControl(
+				Control::Type::Label, PSTR(empty_str), empty_str,
+				Control::Color::None, parent_id), 
 		PSTR(clearLabelStyle));
 }
 
-//============================================================================
 void addFlagsLabel(const char* label, uint16_t parent_id) {
 
 	ESPUI.setElementStyle(
@@ -680,17 +723,17 @@ void addFlagsLabel(const char* label, uint16_t parent_id) {
 		PSTR(clearFlagsLabelStyle));
 }
 
-//============================================================================
 uint16_t addClearLabel(const char* label, uint16_t parent_id) {
 
 	auto label_id = ESPUI.addControl(
-		Control::Type::Label, PSTR(empty_str), label,Control::Color::None,
-		parent_id);
+			Control::Type::Label, PSTR(empty_str), label,Control::Color::None,
+			parent_id);
 	ESPUI.setElementStyle(label_id, PSTR(clearLabelStyle));
 	return label_id;
 }
 
-//============================================================================
+/*****************************************************************************/
+
 bool isNumber(String& str) {
 
     unsigned int stringLength = str.length();
@@ -718,7 +761,8 @@ bool isNumber(String& str) {
     return true;
 }
 
-//============================================================================
+/*****************************************************************************/
+
 const char* getSuplaChannelTypeName(int32_t channelType) {
 
 	switch (channelType) {
@@ -758,7 +802,8 @@ const char* getSuplaChannelTypeName(int32_t channelType) {
 	}
 }
 
-//============================================================================
+/*****************************************************************************/
+
 const char* getSuplaChannelFuncName(int32_t channelType, int32_t channelFunc) {
 
 	switch (channelType) {
@@ -798,7 +843,8 @@ const char* getSuplaChannelFuncName(int32_t channelType, int32_t channelFunc) {
 	}*/
 }
 
-//============================================================================
+/*****************************************************************************/
+
 const char* getZ2SDeviceDescName(uint32_t modelID)  {
 
 	switch (modelID) {
@@ -867,7 +913,8 @@ const char* getZ2SDeviceDescName(uint32_t modelID)  {
 	}
 }
 
-//============================================================================
+/*****************************************************************************/
+
 const char* getZigbeeDataTypeName(uint8_t dataType)  {
 
 	uint32_t zigbee_datatypes_count = sizeof(zigbee_datatypes)/sizeof(zigbee_datatype_t);
@@ -880,8 +927,8 @@ const char* getZigbeeDataTypeName(uint8_t dataType)  {
 	return PSTR("Unknown data type");
 }
 
-//============================================================================
-//============================================================================
+/*****************************************************************************/
+
 void fillGatewayGeneralnformation(char *buf) {
 
 	if (buf) {
@@ -909,7 +956,8 @@ void fillGatewayGeneralnformation(char *buf) {
 	}
 }
 
-//============================================================================
+/*****************************************************************************/
+
 void fillMemoryUptimeInformation(char *buf) {
 
 	if (buf) {
@@ -932,7 +980,8 @@ void fillMemoryUptimeInformation(char *buf) {
 	}
 }
 
-//============================================================================
+/*****************************************************************************/
+
 void enableControlStyle(uint16_t control_id, bool enable) {
 
 	ESPUI.setEnabled(control_id, enable);
@@ -946,23 +995,22 @@ void enableControlStyle(uint16_t control_id, bool enable) {
 	}
 }
 
-//============================================================================
+/*****************************************************************************/
+
 void updateLabel_P(Control::ControlId_t id, const char* value) {
 
 	working_str = value;
 	ESPUI.updateLabel(id, working_str);
 }
 
-//============================================================================
 void updateLabel_C(Control::ControlId_t id, const char* value) {
 
 	working_str = value;
 	ESPUI.updateLabel(id, working_str);
 }
 
-//============================================================================
-// GATEWAY
-//============================================================================
+/*****************************************************************************/
+
 void buildGatewayTabGUI() {
 
 	//char general_purpose_gui_buffer[1024] = {};
@@ -972,7 +1020,6 @@ void buildGatewayTabGUI() {
 		Control::Type::Tab, PSTR(empty_str), working_str_ptr, Control::Color::Emerald,
 		Control::noParent, generalCallback);
 
-	//===========================================================
 	ESPUI.addControl(
 		Control::Type::Separator, PSTR("General information"), empty_str, 
 		Control::Color::None, gatewaytab);
@@ -993,7 +1040,6 @@ void buildGatewayTabGUI() {
 
 	fillMemoryUptimeInformation(general_purpose_gui_buffer);
 	
-	//===========================================================
 	ESPUI.addControl(
 		Control::Type::Separator, PSTR("Status"), empty_str, Control::Color::None,
 		gatewaytab);
@@ -1009,7 +1055,6 @@ void buildGatewayTabGUI() {
 		" font-size: 4 px; font-style: normal; font-weight: normal;");
 	ESPUI.setPanelWide(gateway_memory_info, true);
 
-	//===========================================================
 	auto gui_mode_selector = ESPUI.addControl(
 		Control::Type::Select, PSTR("Select GUI mode (requires restart)"), 
 		(long int) 0, Control::Color::Emerald, gatewaytab, selectGuiModeCallback);
@@ -1123,12 +1168,9 @@ void buildGatewayTabGUI() {
 		rebuild_Supla_channels_switcher, _rebuild_Supla_channels_on_start);
 	ESPUI.updateNumber(use_new_at_model_switcher, _use_new_at_model);
 }
-//============================================================================
-//============================================================================
 
-//============================================================================
-// WIFI & Supla Credentials
-//============================================================================
+/*****************************************************************************/
+
 void buildCredentialsGUI() {
 
 	//char general_purpose_gui_buffer[1024] = {};
@@ -1136,43 +1178,39 @@ void buildCredentialsGUI() {
 	char *working_str_ptr = PSTR("WiFi & Supla credentials");
 	auto wifitab = ESPUI.addControl(
 		Control::Type::Tab, PSTR(empty_str), working_str_ptr);
-		
-	//===========================================================
+
 	working_str = PSTR(empty_str);
 	wifi_ssid_text = ESPUI.addControl(
 		Control::Type::Text, PSTR("SSID"), working_str, Control::Color::Emerald, 
 		wifitab, textCallback);
 
-	//===========================================================
 	working_str = PSTR(empty_str);
 	wifi_pass_text = ESPUI.addControl(
 		Control::Type::Text, PSTR("Password"), working_str, 
 		Control::Color::Emerald, wifitab, textCallback);
+	
 	ESPUI.setInputType(wifi_pass_text, PSTR("password"));
 
-	//===========================================================
 	working_str = PSTR(empty_str);
 	Supla_server = ESPUI.addControl(
 		Control::Type::Text, PSTR("Supla server"), working_str, 
 		Control::Color::Emerald, wifitab, textCallback);
 	
-	//===========================================================
 	working_str = PSTR(empty_str);
 	Supla_email = ESPUI.addControl(
 		Control::Type::Text, PSTR("Supla email"), working_str, 
 		Control::Color::Emerald, wifitab, textCallback);
 	
-	//===========================================================
 	Supla_skip_certificate_switcher = ESPUI.addControl(
 		Control::Type::Switcher, PSTR("Skip CA certificate check"), (long int)0, 
 		Control::Color::Emerald, wifitab, generalCallback);
 
-	//===========================================================
 	working_str_ptr = PSTR("Save");
 	save_button = ESPUI.addControl(
 		Control::Type::Button, PSTR("Save"), working_str_ptr, 
 		Control::Color::Emerald, wifitab, enterWifiDetailsCallback,
 		(void*)GUI_CB_SAVE_FLAG);
+
 	working_str_ptr = PSTR("Save & Restart");
 	auto save_n_restart_button = ESPUI.addControl(
 		Control::Type::Button, PSTR("Save & Restart"), working_str_ptr, 
@@ -1183,64 +1221,23 @@ void buildCredentialsGUI() {
 		Control::Type::Label, PSTR("Status"), working_str, 
 		Control::Color::Wetasphalt, save_button);
 
-	//===========================================================
 	auto cfg = Supla::Storage::ConfigInstance();
   
 	if (cfg) {
-		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-		if (cfg->getWiFiSSID(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+
+  	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+  	if (cfg->getWiFiSSID(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(wifi_ssid_text, general_purpose_gui_buffer);
-	
 		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
 		if (cfg->getSuplaServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Supla_server, general_purpose_gui_buffer);
-			
 		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
 		if (cfg->getEmail(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Supla_email, general_purpose_gui_buffer);
-	
 		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level == 2 ? 1 : 0);
 	}			
 }
-//============================================================================
-//============================================================================
 
-//============================================================================
-// ZABBIX Config
-//============================================================================
-void buildCredentialsZabbix() {
-
-	//char general_purpose_gui_buffer[1024] = {};
-
-	char *working_str_ptr = PSTR("Zabbix config");
-	auto wifitab = ESPUI.addControl(
-		Control::Type::Tab, PSTR(empty_str), working_str_ptr);
-		
-	//===========================================================
-	working_str = PSTR(empty_str);
-	Zabbix_server = ESPUI.addControl(
-		Control::Type::Text, PSTR("Zabbix server"), working_str, 
-		Control::Color::Emerald, wifitab, textCallback);
-	
-	//===========================================================
-	working_str_ptr = PSTR("Save");
-	save_button = ESPUI.addControl(
-		Control::Type::Button, PSTR("Save"), working_str_ptr, 
-		Control::Color::Emerald, wifitab, enterZabbixDetailsCallback,
-		(void*)GUI_CB_SAVE_FLAG);
-
-	//===========================================================
-  
-	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-	if (myCfg.getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
-		ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
-}
-//============================================================================
-//============================================================================
-
-//============================================================================
-// ZIGBEE SETTINGS
-//============================================================================
 void buildZigbeeTabGUI() {
 
 	char *working_str_ptr = PSTR("Zigbee settings");
@@ -1357,52 +1354,131 @@ void buildZigbeeTabGUI() {
 		force_leave_switcher, force_leave_global_flag ? 1 : 0);
 }
 
-//============================================================================
-void rebuildDevicesSelector() {
+/*****************************************************************************/
 
-	for (uint8_t devices_counter = 0; 
-			 devices_counter < Z2S_ZB_DEVICES_MAX_NUMBER; 
-			 devices_counter++) {
+void removeDevicesSelectorDevice(uint8_t device_slot) {
 
-    if (z2s_zb_devices_table[devices_counter].record_id > 0) {
+	if (device_selector < 0xFFFF) {
 
-			ESPUI.removeControl(
-				z2s_zb_devices_table[devices_counter].device_gui_id, false);
-		}
+		Control *first_option_id = ESPUI.getFirstOptionId(
+			device_selector, device_slot);
+
+		if (first_option_id)
+		ESPUI.updateControlValue(first_option_id->GetId(), -2);
+		
+		ESPUI.updateControlValue(device_selector, -1);
+		deviceSelectorCallback(nullptr, -1);
+	}			
+	
+	if (clusters_attributes_table[clusters_attributes_device_selector] <
+			0xFFFF) {
+						
+		Control *first_option_id = ESPUI.getFirstOptionId(
+			clusters_attributes_table[clusters_attributes_device_selector],
+			device_slot);
+
+		if (first_option_id)
+			ESPUI.updateControlValue(first_option_id->GetId(), -2);
+		
+		ESPUI.updateControlValue(
+			clusters_attributes_table[clusters_attributes_device_selector], -1);
+		clustersattributesdeviceSelectorCallback(nullptr, -1);
 	}
 
-	ESPUI.updateControlValue(device_selector, -1);
+	if (advanced_device_selector < 0xFFFF) {
 
-	for (uint8_t devices_counter = 0; 
-			 devices_counter < Z2S_ZB_DEVICES_MAX_NUMBER; 
-			 devices_counter++) {
+		Control *first_option_id = ESPUI.getFirstOptionId(
+			advanced_device_selector, device_slot);
 
-    if (z2s_zb_devices_table[devices_counter].record_id > 0) {
+		if (first_option_id)
+		ESPUI.updateControlValue(first_option_id->GetId(), -2);
+		
+		ESPUI.updateControlValue(advanced_device_selector, -1);
+		advancedDeviceSelectorCallback(nullptr, -1);
+	}
 
-			working_str = devices_counter;
-			z2s_zb_devices_table[devices_counter].device_gui_id =  ESPUI.addControl(
-				Control::Type::Option, 
-				z2s_zb_devices_table[devices_counter].device_local_name, 
-				devices_counter, Control::Color::None, device_selector);
+	if (Tuya_devices_tab_controls_table[Tuya_device_selector] < 0xFFFF) {
+						
+		Control *first_option_id = ESPUI.getFirstOptionId(
+			Tuya_devices_tab_controls_table[Tuya_device_selector], device_slot);
+
+		if (first_option_id)
+			ESPUI.updateControlValue(first_option_id->GetId(), -2);
+
+		ESPUI.updateControlValue(
+			Tuya_devices_tab_controls_table[Tuya_device_selector], -1);
+		TuyaDeviceSelectorCallback(nullptr, -1);
+	}
+}
+
+/*****************************************************************************/
+
+void removeChannelsSelectorChannel(
+	int16_t channel_number_slot,int32_t channel_option_id) {
+
+	if ((channel_selector < 0xFFFF) || 
+			(action_source_channel_selector < 0xFFFF))
+		ESPUI.updateControlValue(channel_option_id, -2);
+
+	if (action_source_channel_selector < 0xFFFF) {
+
+		ESPUI.updateControlValue(action_source_channel_selector, -1);
+		ESPUI.updateControlValue(action_destination_channel_selector, -1);
+	}
+
+	/*if (channel_selector == 0xFFFF);
+	uint16_t actions_source_channel_option_id = 
+		action_source_channel_selector_first_option_id +
+		(channel_option_id - channel_selector_first_option_id);
+
+	uint16_t actions_destination_channel_option_id = 
+		action_destination_channel_selector_first_option_id +
+		(channel_option_id - channel_selector_first_option_id);
+
+	int32_t channel_selector_value = 
+		ESPUI.getControl(channel_selector)->getValueInt();
+	
+	
+	ESPUI.updateControlValue(channel_option_id, -2);
+	ESPUI.updateControlValue(actions_source_channel_option_id, -2);
+	ESPUI.updateControlValue(actions_destination_channel_option_id, -2);
+
+	ESPUI.updateControlValue(action_source_channel_selector, -1);
+	ESPUI.updateControlValue(action_destination_channel_selector, -1);*/
+
+	if (channel_selector < 0xFFFF) {
+
+		int32_t channel_selector_value = 
+			ESPUI.getControl(channel_selector)->getValueInt();
+		
+		if (channel_selector_value > -1) {
+
+			int16_t next_channel_slot = 
+				Z2S_findChannelNumberNextSlot(channel_number_slot);
+
+			if (next_channel_slot >= 0)
+				ESPUI.updateSelect(channel_selector, next_channel_slot);
+			else
+				ESPUI.updateSelect(channel_selector, (long int)-1);
+
+			channelSelectorCallback(nullptr, next_channel_slot);
 		}
 	}
 }
-//============================================================================
-//============================================================================
 
-//============================================================================
+/*****************************************************************************/
+
 void buildDevicesTabGUI() {
 
 	char *working_str_ptr = PSTR("Zigbee devices");
 	devicestab = ESPUI.addControl(
 		Control::Type::Tab, PSTR(empty_str), working_str_ptr);
 	
-	working_str = -1;
 	device_selector = ESPUI.addControl(
 		Control::Type::Select, PSTR("Devices"), (long int)-1, 
 		Control::Color::Emerald, devicestab, deviceSelectorCallback);
 
-	device_selector_main_option =ESPUI.addControl(
+	ESPUI.addControl(
 		Control::Type::Option, PSTR("Select Zigbee device..."), 
 		(long int)-1, Control::Color::None, device_selector);
 
@@ -1411,7 +1487,6 @@ void buildDevicesTabGUI() {
 
     if (z2s_zb_devices_table[devices_counter].record_id > 0) {
 
-			working_str = devices_counter;
 			z2s_zb_devices_table[devices_counter].device_gui_id = ESPUI.addControl(
 				Control::Type::Option, 
 				z2s_zb_devices_table[devices_counter].device_local_name, 
@@ -1567,7 +1642,8 @@ void buildDevicesTabGUI() {
 	enableDeviceControls(false);
 }
 
-//============================================================================
+/*****************************************************************************/
+
 void rebuildChannelsSelector(
 	bool rebuild_channels_list, uint16_t channelstab = 0xFFFF) {
 
@@ -1592,7 +1668,7 @@ void rebuildChannelsSelector(
 			Control::Color::Emerald, channelstab, channelSelectorCallback);
 
 	
-		main_channel_option = ESPUI.addControl(
+		ESPUI.addControl(
 			Control::Type::Option, PSTR("Select Zigbee channel..."), (long int)-1,
 			Control::Color::None, channel_selector);
 
@@ -1604,15 +1680,14 @@ void rebuildChannelsSelector(
 	uint16_t current_option_id = 0xFFFF;
 
 	channel_selector_first_option_id 	= 0xFFFF;
-	//channel_selector_last_option_id 	= 0xFFFF;
 
-	for (uint8_t channels_counter = 0; 
+	/*for (uint8_t channels_counter = 0; 
 			 channels_counter < Z2S_CHANNELS_MAX_NUMBER; 
 			 channels_counter++) {
 
     if (z2s_channels_table[channels_counter].valid_record) {
       
-			//z2s_channels_table[channels_counter].gui_control_id  = 
+			z2s_channels_table[channels_counter].gui_control_id  = 
 			current_option_id = ESPUI.addControl(
 				Control::Type::Option, 
 				z2s_channels_table[channels_counter].Supla_channel_name, 
@@ -1621,29 +1696,18 @@ void rebuildChannelsSelector(
 			if (channel_selector_first_option_id == 0xFFFF)
 				channel_selector_first_option_id = current_option_id;
 			
-			/*log_i(
-				"\n\rchannels_counter %u\n\rcurrent_option_id %u"
-				"\n\r\channel_selector_first_option_id %u",
-					channels_counter, current_option_id,
-					channel_selector_first_option_id);*/
-
+			
 			z2s_channels_table[channels_counter].gui_control_id = 
 				current_option_id; //for channel name update
 		}
-	}
+	}*/
 	
-	//channel_selector_last_option_id = current_option_id;
-	
-	/*log_i("\n\r\channel_selector_first_option_id %u"
-				"\n\rchannel_selector_last_option_id %u",
-						channel_selector_first_option_id,
-						channel_selector_last_option_id);*/
-
 	if (rebuild_channels_list)
 		channelSelectorCallback(ESPUI.getControl(channel_selector), SL_VALUE);
 }
 
-//============================================================================
+/*****************************************************************************/
+
 void buildChannelsTabGUI() {
 
 	char *working_str_ptr = PSTR("Zigbee channels");
@@ -2026,7 +2090,6 @@ void buildClustersAttributesTab() {
 	clusters_attributes_table[clusters_attributes_tab] = ESPUI.addControl(
 		Control::Type::Tab, PSTR(empty_str), working_str_ptr);
 	
-	working_str = -1;
 	clusters_attributes_table[clusters_attributes_device_selector] = 
 		ESPUI.addControl(
 			Control::Type::Select, PSTR("Devices"), (long int)-1, 
@@ -2190,7 +2253,7 @@ void buildClustersAttributesTab() {
 	
 	uint16_t current_option_id = 0xFFFF;
 	
-	for (uint32_t i = 0; i < zigbee_attributes_count; i++) {
+	/*for (uint32_t i = 0; i < zigbee_attributes_count; i++) {
 			
 		current_option_id = ESPUI.addControl(
 			Control::Type::Option, zigbee_attributes[i].zigbee_attribute_name, 
@@ -2200,7 +2263,19 @@ void buildClustersAttributesTab() {
 		if (device_attribute_id_selector_first_option_id == 0xFFFF)
 			device_attribute_id_selector_first_option_id = current_option_id;
 
-		//ESPUI.updateVisibility(current_option_id, false);
+	}*/
+
+	max_attribute_id_selector_options = getMaxClusterAttributesNumber();
+
+	for (uint8_t i = 0; i < max_attribute_id_selector_options; i++) {
+			
+		current_option_id = ESPUI.addControl(
+			Control::Type::Option, PSTR("EMPTY ATTRIBUTE ID"), -3, 
+			Control::Color::None, 
+			clusters_attributes_table[device_attribute_id_selector]);
+
+		if (device_attribute_id_selector_first_option_id == 0xFFFF)
+			device_attribute_id_selector_first_option_id = current_option_id;
 	}
 
 	uint32_t zigbee_datatypes_count = 
@@ -2217,14 +2292,16 @@ void buildClustersAttributesTab() {
 			clusters_attributes_table[device_attribute_type_selector]);
 	}
 
+	max_attribute_value_selector_options = getMaxAttributeValuesNumber();
+
 	uint32_t zigbee_attribute_values_count = 
 		sizeof(zigbee_attribute_values)/sizeof(zigbee_attribute_value_t);
 
-	for (uint32_t i = 0; i < zigbee_attribute_values_count; i++) {
+	for (uint32_t i = 0; i < max_attribute_value_selector_options; i++) {
 
 		current_option_id = ESPUI.addControl(
-			Control::Type::Option, 
-			zigbee_attribute_values[i].zigbee_attribute_value_name, 
+			Control::Type::Option, PSTR("EMPTY ATTRIBUTE VALUE"),
+			//zigbee_attribute_values[i].zigbee_attribute_value_name, 
 			-3, Control::Color::None, 
 			clusters_attributes_table[device_attribute_value_selector]);
 
@@ -2606,68 +2683,49 @@ void enableTuyaDevicesControls(bool enable) {
 
 void rebuildTuyaDevicesDatapointsList(uint8_t Tuya_device_slot) {
 
-	/*if (Tuya_devices_id_selector_first_option_id < 0xFFFF) {
-
-		for (uint16_t options_id_counter = Tuya_devices_id_selector_first_option_id;
-				 options_id_counter <= Tuya_devices_id_selector_last_option_id;
-				 options_id_counter++) {
-
-					if (options_id_counter < 0xFFFF)
-					ESPUI.removeControl(options_id_counter, false);
-		}
-	}*/
-
 	ESPUI.updateControlValue(
 		Tuya_devices_tab_controls_table[Tuya_datapoint_id_selector], -1);
 										
+	if (Tuya_device_slot == 0xFF) {
 
-	if (Tuya_device_slot == 0xFF)
+		for (uint32_t i = 0; i < max_Tuya_datapoints_selector_options; i++)
+		ESPUI.updateControlValue(
+				Tuya_datapoint_id_selector_first_option_id + i, -2);
+
 		return;
+	}
+		
 
 	uint32_t Tuya_datapoints_desc_number = 
 	sizeof(Tuya_datapoints) / sizeof(Tuya_datapoint_desc_t);
-	
-	//Tuya_devices_id_selector_first_option_id = 0xFFFF;
-	//Tuya_devices_id_selector_last_option_id		= 0xFFFF;
 
-	//uint16_t current_option_id = 0xFFFF;
-	uint32_t current_option_id = 0;
-	bool has_zb_device = false;
-	uint32_t z2s_device_desc_id = 0;
+	uint8_t datapoints_counter = 0;
 
 	uint32_t z2s_current_device_desc_id = 
 		z2s_zb_devices_table[Tuya_device_slot].desc_id;
 
 	for (uint32_t i = 0; i < Tuya_datapoints_desc_number; i++) {
 	
-		if (Tuya_datapoints[i].z2s_device_desc_id != z2s_device_desc_id) {
-
-			z2s_device_desc_id = Tuya_datapoints[i].z2s_device_desc_id;
-			has_zb_device = Z2S_hasZbDevice(z2s_device_desc_id);
-		}
-
-		if (has_zb_device) {
-		
 		if (Tuya_datapoints[i].z2s_device_desc_id == z2s_current_device_desc_id) {
 
-			ESPUI.updateControlValue(
-				Tuya_devices_id_selector_first_option_id + current_option_id, i);
-		
-			/*current_option_id = ESPUI.addControl(
-				Control::Type::Option, Tuya_datapoints[i].Tuya_datapoint_name, 
-				i, Control::Color::None, 
-				Tuya_devices_tab_controls_table[Tuya_datapoint_id_selector]);
+			ESPUI.updateControlLabel(
+				Tuya_datapoint_id_selector_first_option_id + datapoints_counter,
+				Tuya_datapoints[i].Tuya_datapoint_name);
 
-			if (Tuya_devices_id_selector_first_option_id == 0xFFFF)
-				Tuya_devices_id_selector_first_option_id = current_option_id;*/
-		} else
-		if (Tuya_datapoints[i].z2s_device_desc_id == _z2s_last_device_desc_id)
 			ESPUI.updateControlValue(
-				Tuya_devices_id_selector_first_option_id + current_option_id, -2);
-		current_option_id++;
-		}
+				Tuya_datapoint_id_selector_first_option_id + datapoints_counter, i);
+
+			datapoints_counter++;
+		} 
 	}
-	_z2s_last_device_desc_id = z2s_current_device_desc_id;
+	log_i(
+		"%u datapoints definitions added for Tuya device id 0x%04X", 
+		datapoints_counter, z2s_current_device_desc_id);
+
+	for (uint32_t i = datapoints_counter; 
+			 i < max_Tuya_datapoints_selector_options; i++)
+		ESPUI.updateControlValue(
+				Tuya_datapoint_id_selector_first_option_id + i, -2);
 }
 
 void buildTuyaCustomClusterTabGUI() {
@@ -2724,7 +2782,7 @@ void buildTuyaCustomClusterTabGUI() {
 	uint32_t z2s_device_desc_id = 0;
 	bool has_zb_device = false;
 
-	for (uint32_t i = 0; i < Tuya_datapoints_desc_number; i++) {
+	/*for (uint32_t i = 0; i < Tuya_datapoints_desc_number; i++) {
 	
 		if (Tuya_datapoints[i].z2s_device_desc_id != z2s_device_desc_id) {
 
@@ -2742,8 +2800,21 @@ void buildTuyaCustomClusterTabGUI() {
 			if (Tuya_devices_id_selector_first_option_id == 0xFFFF)
 				Tuya_devices_id_selector_first_option_id = current_option_id;
 		}
-	}
+	}*/
+	
+	max_Tuya_datapoints_selector_options = getMaxTuyaDatapointsNumber();
 
+	for (uint32_t i = 0; i < max_Tuya_datapoints_selector_options; i++) {
+	
+		current_option_id = ESPUI.addControl(
+				Control::Type::Option, PSTR("EMPTY DATAPOINT ID"), -3, 
+				Control::Color::None, 
+				Tuya_devices_tab_controls_table[Tuya_datapoint_id_selector]);
+
+		if (Tuya_datapoint_id_selector_first_option_id == 0xFFFF)
+			Tuya_datapoint_id_selector_first_option_id = current_option_id;
+	}
+	
 	Tuya_devices_tab_controls_table[Tuya_datapoint_id_number] =	
 		ESPUI.addControl(
 			Control::Type::Number, PSTR(empty_str), (long int)0, 
@@ -3165,7 +3236,9 @@ bool fillActionDetails(z2s_channel_action_t &action) {
 
 	strncpy(action.action_description, ESPUI.getControl(action_description_text)->getValueCstr(), 127);
 
-	int32_t selector_value = ESPUI.getControl(action_source_channel_selector)->getValueInt();
+	int32_t selector_value = 
+		ESPUI.getControl(action_source_channel_selector)->getValueInt();
+
 	if ( selector_value >= 0)
 		action.src_Supla_channel = selector_value;
 	else
@@ -3215,42 +3288,58 @@ bool fillActionDetails(z2s_channel_action_t &action) {
 	return true;
 }
 
+void buildAllChannelSelectors() {
+
+	for (uint8_t channels_counter = 0; 
+			 channels_counter < Z2S_CHANNELS_MAX_NUMBER; channels_counter++) {
+    if (z2s_channels_table[channels_counter].valid_record) {
+	
+			if (channel_selector < 0xFFFF) {
+
+				z2s_channels_table[channels_counter].gui_control_id = ESPUI.addControl(
+					Control::Type::Option, 
+					z2s_channels_table[channels_counter].Supla_channel_name, 
+					channels_counter, Control::Color::None, channel_selector);
+
+				if (action_source_channel_selector < 0xFFFF) {
+
+					ESPUI.getControl(
+						z2s_channels_table[channels_counter].\
+							gui_control_id)->secondParent = action_source_channel_selector;
+					ESPUI.getControl(
+						z2s_channels_table[channels_counter].\
+							gui_control_id)->thirdParent = 
+								action_destination_channel_selector;
+				}
+			} else {
+
+				if (action_source_channel_selector < 0xFFFF) {
+
+					z2s_channels_table[channels_counter].gui_control_id = 
+						ESPUI.addControl(
+							Control::Type::Option, 
+							z2s_channels_table[channels_counter].Supla_channel_name, 
+							channels_counter, Control::Color::None, 
+							action_source_channel_selector);
+
+					ESPUI.getControl(
+						z2s_channels_table[channels_counter].\
+							gui_control_id)->secondParent = 
+								action_destination_channel_selector;
+				}
+			}
+		}
+	}
+}
+
 void buildActionsChannelSelectors(
 	bool rebuild_options, uint16_t parent_control_id = 0xFFFF) {
 
 	if (rebuild_options) {
 
-		/*if (action_source_channel_selector_first_option_id < 0xFFFF) {
-
-		
-			for (uint8_t options_id_counter = action_source_channel_selector_first_option_id; 
-					options_id_counter <= action_source_channel_selector_last_option_id; 
-					options_id_counter++) {
-
-				if (options_id_counter < 0xFFFF) {
-					ESPUI.removeControl(options_id_counter, false);
-				}
-			}
-		}*/
-
 		ESPUI.updateControlValue(action_source_channel_selector, -1); 
 
-		/*if (action_destination_channel_selector_first_option_id < 0xFFFF) {
-	
-			for (uint8_t options_id_counter = 
-						action_destination_channel_selector_first_option_id; 
-					options_id_counter <= 
-						action_destination_channel_selector_last_option_id; 
-					options_id_counter++) {
-
-				if (options_id_counter < 0xFFFF) {
-					ESPUI.removeControl(options_id_counter, false);
-				}
-			}
-		}*/
-		
-		ESPUI.updateControlValue(
-			action_destination_channel_selector, -1); 
+		ESPUI.updateControlValue(action_destination_channel_selector, -1); 
 
 	} else { 
 		
@@ -3299,14 +3388,10 @@ void buildActionsChannelSelectors(
 
 		ESPUI.addControl(
 			Control::Type::Option, PSTR("Select destination channel..."), 
-			(long int)-1, Control::Color::None, 
-			action_destination_channel_selector);
+			(long int)-1, Control::Color::None, action_destination_channel_selector);
 	}
 
 	uint16_t current_option_id 			= 0xFFFF;
-
-	//action_source_channel_selector_first_option_id 		 		 = 0xFFFF;
-	//action_source_channel_selector_last_option_id 			 	 = 0xFFFF;
 
 	for (uint8_t channels_counter = 0; 
 			 channels_counter < Z2S_CHANNELS_MAX_NUMBER; 
@@ -3314,26 +3399,20 @@ void buildActionsChannelSelectors(
 
     if (z2s_channels_table[channels_counter].valid_record) {
       
-			current_option_id = ESPUI.addControl(
-					Control::Type::Option,  
-					z2s_channels_table[channels_counter].Supla_channel_name, 
-					z2s_channels_table[channels_counter].Supla_channel, 
-					Control::Color::None, action_source_channel_selector);
-			
-			//if (action_source_channel_selector_first_option_id == 0xFFFF) 
-			//	action_source_channel_selector_first_option_id = current_option_id;
+			/*current_option_id = ESPUI.addControl(
+				Control::Type::Option,  
+				z2s_channels_table[channels_counter].Supla_channel_name, 
+				z2s_channels_table[channels_counter].Supla_channel, 
+				Control::Color::None, action_source_channel_selector);
+
+			if (action_source_channel_selector_first_option_id == 0xFFFF) 
+				action_source_channel_selector_first_option_id = current_option_id;*/			
 		}
 	}
 
-	//action_source_channel_selector_last_option_id = current_option_id;
-
 	current_option_id = 0xFFFF; 
-
-	//action_destination_channel_selector_first_option_id 	 = 0xFFFF;
-	//action_destination_channel_selector_last_option_id  	 = 0xFFFF;
-
-
-	for (uint8_t channels_counter = 0; 
+	
+	/*for (uint8_t channels_counter = 0; 
 			 channels_counter < Z2S_CHANNELS_MAX_NUMBER; channels_counter++) {
     if (z2s_channels_table[channels_counter].valid_record) {
 	
@@ -3343,12 +3422,29 @@ void buildActionsChannelSelectors(
 					z2s_channels_table[channels_counter].Supla_channel,
 					Control::Color::None, action_destination_channel_selector);
 
-			//if (action_destination_channel_selector_first_option_id == 0xFFFF) 
-			//	action_destination_channel_selector_first_option_id = current_option_id;
+			if (action_destination_channel_selector_first_option_id == 0xFFFF) 
+				action_destination_channel_selector_first_option_id = current_option_id;
+
+			z2s_channels_table[channels_counter].gui_control_id = ESPUI.addControl(
+				Control::Type::Option, 
+				z2s_channels_table[channels_counter].Supla_channel_name, 
+				channels_counter, Control::Color::None, channel_selector);
+
+			ESPUI.getControl(
+				z2s_channels_table[channels_counter].gui_control_id)->secondParent =
+					action_source_channel_selector;
+			ESPUI.getControl(
+				z2s_channels_table[channels_counter].gui_control_id)->thirdParent =
+					action_destination_channel_selector;
+
+			log_i(
+				"2nd Parent %u, 3rd Parent = %u",
+				ESPUI.getControl(
+				z2s_channels_table[channels_counter].gui_control_id)->secondParent,
+				ESPUI.getControl(
+				z2s_channels_table[channels_counter].gui_control_id)->thirdParent);
 		}
-	}
-	
-	//action_destination_channel_selector_last_option_id = current_option_id;
+	}*/
 }
 
 void buildActionsTabGUI() {
@@ -3663,85 +3759,66 @@ void Z2S_buildWebGUI(gui_modes_t mode, uint32_t gui_custom_flags) {
 					GUI_BUILD_CONTROL_FLAG_DEVICES |
 					GUI_BUILD_CONTROL_FLAG_CHANNELS;
 			} break;
+
+
+			case gateway_no_local_actions_mode: {
+
+				gui_build_control_flags = 
+					GUI_BUILD_CONTROL_FLAG_GATEWAY |
+					GUI_BUILD_CONTROL_FLAG_ZIGBEE |
+					GUI_BUILD_CONTROL_FLAG_DEVICES |
+					GUI_BUILD_CONTROL_FLAG_CHANNELS |
+					GUI_BUILD_CONTROL_FLAG_CA |
+					GUI_BUILD_CONTROL_FLAG_TCC;
+			} break;
 		}
 	}
 
+	clusters_attributes_table[clusters_attributes_device_selector] = 0xFFFF;
+	Tuya_devices_tab_controls_table[Tuya_device_selector] = 0xFFFF;
+
 	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_GATEWAY) {
 		buildGatewayTabGUI();
-		//mem_log("GATEWAY");
 	}
 
 	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_CREDENTIALS) {
 		buildCredentialsGUI();
-		//mem_log("CREDENTIALS");
-	}
-
-	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_CREDENTIALS) {
-		buildCredentialsZabbix();
-		//mem_log("ZABBIX");
 	}
 
 	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_ZIGBEE) {
 		buildZigbeeTabGUI();
-		//mem_log("ZIGBEE");
 	}
 
 	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_DEVICES) {
 		buildDevicesTabGUI();
-		//mem_log("DEVICES");
 	}
 	
 	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_CHANNELS) {
 		buildChannelsTabGUI();
-		//mem_log("CHANNELS");
 	}
 	
 	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_ACTIONS) {
 		buildActionsTabGUI();
-		//mem_log("ACTIONS");
 	}
 
 	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_CA) {
 		buildClustersAttributesTab();
-		//mem_log("C&A");
 	}
 	
 	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_AD) {
 		buildAdvancedDevicesTabGUI();
-		//mem_log("AD");
 	}
 
 	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_TCC) {
 		buildTuyaCustomClusterTabGUI();
-		//mem_log("TCC");
 	}
+
+	buildAllChannelSelectors();
 	
 	log_i(" ...GUI building FINISHED");
 
 	GUIbuilt = true;
 
-	/*uint16_t max_size = 0;
-	uint16_t min_size = 0xFFFF;
-	uint32_t total_size = 0;
-	uint16_t control_size = 0;*/
-	Control *ESPUIcontrol = nullptr;
-
-	/*for (uint16_t control_idx = 0; 
-			 control_idx <= ESPUIcontrolMgr.GetControlCount(); control_idx++) {
-
-		ESPUIcontrol = ESPUI.getControl(control_idx);
-		if (ESPUIcontrol)
-			control_size = ESPUIcontrol->getValue().length();
-		if (control_size > max_size)
-			max_size = control_size;
-		if (control_size < min_size)
-			min_size = control_size;
-		total_size += control_size;
-	}
-	log_i(
-		"CONTROLS: TOTAL SIZE %lu, MIN_SIZE %u, MAX_SIZE %u, AVG_SIZE %u", 
-		total_size, min_size, max_size, 
-		total_size / ESPUIcontrolMgr.GetControlCount());*/
 	log_i("Control sizeof %u, String sizeof %u", sizeof(Control), sizeof(String));
 }
 
@@ -3749,9 +3826,6 @@ void Z2S_reloadWebGUI() {
 
 }
 
-//============================================================================
-// START
-//============================================================================
 void Z2S_startWebGUIConfig() {
 
 	//char general_purpose_gui_buffer[1024] = {};
@@ -3780,58 +3854,51 @@ void Z2S_startWebGUIConfig() {
 		Control::Type::Separator, PSTR("Status"), empty_str, 
 		Control::Color::None);
 
-	ESPUI.addControl(
+  ESPUI.addControl(
 		Control::Type::Separator, PSTR("WiFi & Supla credentials"), empty_str, 
 		Control::Color::None);
 
-	working_str = empty_str;
+  working_str = empty_str;
 	wifi_ssid_text = ESPUI.addControl(
 		Control::Type::Text, PSTR("SSID"), working_str, 
 		Control::Color::Emerald, Control::noParent, textCallback);
 
 	wifi_pass_text = ESPUI.addControl(Control::Type::Text, 
-															"Password", 
-															working_str, 
-															Control::Color::Emerald, 
-															Control::noParent, textCallback);
+																		"Password", 
+																		working_str, 
+																		Control::Color::Emerald, 
+																		Control::noParent, textCallback);
 
 	ESPUI.setInputType(wifi_pass_text, PSTR("password"));
 
 	Supla_server = ESPUI.addControl(Control::Type::Text, 
-															PSTR("Supla server"), 
-															working_str, 
-															Control::Color::Emerald, 
-															Control::noParent, 
-															textCallback);
+																	PSTR("Supla server"), 
+																	working_str, 
+																	Control::Color::Emerald, 
+																	Control::noParent, 
+																	textCallback);
 
 	Supla_email = ESPUI.addControl(Control::Type::Text, 
-															"Supla email",
-															working_str, 
-															Control::Color::Emerald, 
-															Control::noParent, 
-															textCallback);
+																 "Supla email",
+																 working_str, 
+																 Control::Color::Emerald, 
+																 Control::noParent, 
+																 textCallback);
 
 	
 	Supla_skip_certificate_switcher = ESPUI.addControl(Control::Type::Switcher, 
-															PSTR("Skip CA certificate check"), 
-															(long int)0,
-															Control::Color::Emerald, 
-															Control::noParent, 
-															generalCallback);
-
-	Zabbix_server = ESPUI.addControl(Control::Type::Text, 
-															PSTR("Zabbix server"), 
-															working_str, 
-															Control::Color::Emerald, 
-															Control::noParent, 
-															textCallback);
+																										 PSTR("Skip CA certificate check"), 
+																										 (long int)0,
+																										 Control::Color::Emerald, 
+																										 Control::noParent, 
+																										 generalCallback);
 
 	auto gui_mode_selector = ESPUI.addControl(Control::Type::Select, 
-									 						PSTR("Select GUI mode (requires restart)"), 
-															(long int)(long int)0, 
-															Control::Color::Emerald, 
-															Control::noParent, 
-															selectGuiModeCallback);
+									 												  PSTR("Select GUI mode (requires restart)"), 
+																		 				(long int)(long int)0, 
+																		 				Control::Color::Emerald, 
+																		 				Control::noParent, 
+																		 				selectGuiModeCallback);
 
 	for (uint8_t modes_counter = no_gui_mode; modes_counter < gui_modes_number; 
 	     modes_counter++) {
@@ -3873,38 +3940,36 @@ void Z2S_startWebGUIConfig() {
 	auto cfg = Supla::Storage::ConfigInstance();
   
 	if (cfg) {
-		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-		if (cfg->getWiFiSSID(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+
+  	memset(
+			general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+  	if (cfg->getWiFiSSID(general_purpose_gui_buffer) && 
+			  strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(wifi_ssid_text, general_purpose_gui_buffer);
 
-		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-		if (cfg->getSuplaServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+		memset(
+			general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+		if (cfg->getSuplaServer(general_purpose_gui_buffer) && 
+				strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Supla_server, general_purpose_gui_buffer);
 
-		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-		if (cfg->getEmail(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+		memset(
+			general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+		if (cfg->getEmail(general_purpose_gui_buffer) && 
+				strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Supla_email, general_purpose_gui_buffer);
 
 		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level);
 	}
-	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-	if (myCfg.getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
-		ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
 
 	working_str = _enable_gui_on_start;
 	ESPUI.updateSelect(gui_mode_selector, _enable_gui_on_start); 
 	ESPUI.updateNumber(gui_start_delay_number, _gui_start_delay);
 
-	printf("Supla server %s\n", Supla_server);
-	printf("EMAIL %s\n", Supla_email);
-	printf("Zabbix server %s\n", Zabbix_server);
-
 	ESPUI.begin("ZIGBEE <=> SUPLA CONFIG PAGE");
 	GUIstarted = true;
 }
-//============================================================================
 
-//============================================================================
 void Z2S_startWebGUI() {
 
   log_i("STOP WEB GUI");
@@ -3917,7 +3982,6 @@ void Z2S_startWebGUI() {
 	handleGatewayEvent(Z2S_SUPLA_EVENT_ON_GUI_STARTED);
 }
 
-//============================================================================
 void Z2S_stopWebGUI() {
 	
 	log_i("STOP WEB GUI");
@@ -3969,8 +4033,6 @@ void Z2S_updateWebGUI() {
 
 void clusterCallbackCmd() {
 
-	//clearAttributeIdSelect();
-	//clearAttributeValueSelect();
 
 	int32_t cluster_id = ESPUI.getControl(
 			clusters_attributes_table[device_cluster_selector])->getValueInt();
@@ -3995,46 +4057,32 @@ void clusterCallbackCmd() {
 	uint32_t zigbee_attributes_count = 
 		sizeof(zigbee_attributes) / sizeof(zigbee_attribute_t);
 	
-	//device_attribute_id_selector_first_option_id = 0xFFFF;
-	//device_attribute_id_selector_last_option_id	= 0xFFFF;
-
 	uint16_t current_option_id = 0xFFFF;
+	uint8_t	attributes_counter = 0;
 
 	for (uint32_t i = 0; i < zigbee_attributes_count; i++) {
 	
 		if (zigbee_attributes[i].zigbee_attribute_cluster_id == cluster_id) {
 
-			/*log_i(
-				"update visibility for %u as TRUE",
-				device_attribute_id_selector_first_option_id + i);
-
-			ESPUI.updateVisibility(
-				device_attribute_id_selector_first_option_id + i, true);*/
+			ESPUI.updateControlLabel(
+				device_attribute_id_selector_first_option_id + attributes_counter,
+				zigbee_attributes[i].zigbee_attribute_name);
+				
 			ESPUI.updateControlValue(
-				device_attribute_id_selector_first_option_id + i, i);
+				device_attribute_id_selector_first_option_id + attributes_counter, i);
 
-			/*current_option_id =ESPUI.addControl(
-					Control::Type::Option, zigbee_attributes[i].zigbee_attribute_name, 
-					i, Control::Color::None, 
-					clusters_attributes_table[device_attribute_id_selector]);
-
-			if (device_attribute_id_selector_first_option_id == 0xFFFF)
-				device_attribute_id_selector_first_option_id = current_option_id;*/
-		} else {
-
-			/*log_i(
-				"update visibility for %u as FALSE",
-				device_attribute_id_selector_first_option_id + i);
-
-			ESPUI.updateVisibility(
-				device_attribute_id_selector_first_option_id + i, false);*/
-			if (zigbee_attributes[i].zigbee_attribute_cluster_id == _last_cluster_id)
-			ESPUI.updateControlValue(
-				device_attribute_id_selector_first_option_id + i, -2);
-		}
+			attributes_counter++;
+		} 
 	}
-	//device_attribute_id_selector_last_option_id = current_option_id;
-	_last_cluster_id = cluster_id;
+	log_i(
+		"%u attributes added for cluster 0x%04X", attributes_counter, cluster_id);
+
+	for (uint8_t i = attributes_counter; i < max_attribute_id_selector_options;
+			 i++)
+		ESPUI.updateControlValue(
+				device_attribute_id_selector_first_option_id + i, -2);
+
+	//_last_cluster_id = cluster_id;
 	attributeCallback(nullptr, -1);
 }
 
@@ -4139,40 +4187,28 @@ void Z2S_loopWebGUI() {
 	}
 }
 
-//============================================================================
 void enterWifiDetailsCallback(Control *sender, int type, void *param) {
 
 	if ((type == B_UP) && data_ready) {
-	
-		auto cfg = Supla::Storage::ConfigInstance();
+		
+    auto cfg = Supla::Storage::ConfigInstance();
+
 		if (cfg) {
 
 			cfg->setWiFiSSID(ESPUI.getControl(wifi_ssid_text)->getValueCstr());
-			cfg->setWiFiPassword(ESPUI.getControl(wifi_pass_text)->getValueCstr());
+  		cfg->setWiFiPassword(ESPUI.getControl(wifi_pass_text)->getValueCstr());
 			cfg->setSuplaServer(ESPUI.getControl(Supla_server)->getValueCstr());
-			cfg->setEmail(ESPUI.getControl(Supla_email)->getValueCstr());
+		  cfg->setEmail(ESPUI.getControl(Supla_email)->getValueCstr());
 			cfg->setUInt8(
 				PSTR("security_level"), 
 				ESPUI.getControl(
 					Supla_skip_certificate_switcher)->getValueInt() > 0 ? 2 :0);
+
 			cfg->commit();
 			if ((uint32_t)param == GUI_CB_RESTART_FLAG) SuplaDevice.softRestart();
 		}
 	}
 }
-
-//============================================================================
-void enterZabbixDetailsCallback(Control *sender, int type, void *param) {
-    if ((type == B_UP) && data_ready) {
-        auto cfg = Supla::Storage::ConfigInstance();
-        if (cfg) {
-            myCfg.setZabbixServer(ESPUI.getControl(Zabbix_server)->getValueCstr());
-            myCfg.save();  // zapis do flash
-            cfg->commit();
-        }
-    }
-}
-//============================================================================
 
 void textCallback(Control *sender, int type) {
 		
@@ -4188,7 +4224,6 @@ void textCallback(Control *sender, int type) {
 		}
 }
 
-//============================================================================
 void generalCallback(Control *sender, int type) {
 	
 	/*Serial.print("CB: id(");
@@ -4201,18 +4236,17 @@ void generalCallback(Control *sender, int type) {
 	//Serial.println(sender->getValue());
 }
 
-//============================================================================
 void onZigbeeTabCallback(Control *sender, int type) {
+	
 	ESPUI.updateNumber(pairing_mode_switcher, Zigbee.isNetworkOpen() ? 1 : 0);
 	ESPUI.updateNumber(force_leave_switcher, force_leave_global_flag ? 1 : 0);	
 }
 
-//============================================================================
 void onChannelsTabCallback(Control *sender, int type) {
+	
 }
 
 
-//============================================================================
 void generalMinMaxCallback(Control *sender, int type, void* param) {
 	
 	Serial.print("CB: id(");
@@ -4226,7 +4260,6 @@ void generalMinMaxCallback(Control *sender, int type, void* param) {
 		ESPUI.updateNumber(sender->GetId(), max_value);
 }
 
-//============================================================================
 void endpointCallback(Control *sender, int type) {
 	
 	Serial.print("CB: id(");
@@ -4276,19 +4309,30 @@ void enableDeviceControls(bool enable) {
 
 void enableClustersAttributesControls(bool enable) {
 
-	if (enable == (controls_enabled_flags & CLUSTERS_ATTRIBUTES_CONTROLS_ENABLED_FLAG))
+	if (enable == 
+				(controls_enabled_flags & CLUSTERS_ATTRIBUTES_CONTROLS_ENABLED_FLAG))
 		return;
 
-	updateLabel_C(clusters_attributes_table[device_read_attribute_label], three_dots_str);
-	updateLabel_C(clusters_attributes_table[device_Tuya_payload_label], three_dots_str);
+	updateLabel_P(
+		clusters_attributes_table[clusters_attributes_device_info_label], 
+		three_dots_str);
+
+	updateLabel_C(
+		clusters_attributes_table[device_read_attribute_label], three_dots_str);
+	updateLabel_C(
+		clusters_attributes_table[device_Tuya_payload_label], three_dots_str);
 
 	ESPUI.updateSelect(clusters_attributes_table[device_cluster_selector], -1);
-	ESPUI.updateSelect(clusters_attributes_table[device_attribute_id_selector], -1);
-	ESPUI.updateSelect(clusters_attributes_table[device_attribute_value_selector], -1);
-	ESPUI.updateSelect(clusters_attributes_table[device_attribute_type_selector], -1); 
+	ESPUI.updateSelect(
+		clusters_attributes_table[device_attribute_id_selector], -1);
+	ESPUI.updateSelect(
+		clusters_attributes_table[device_attribute_value_selector], -1);
+	ESPUI.updateSelect(
+		clusters_attributes_table[device_attribute_type_selector], -1); 
 
 	ESPUI.updateNumber(clusters_attributes_table[device_endpoint_number], 1);
-	ESPUI.updateNumber(clusters_attributes_table[device_attribute_size_number], 0);
+	ESPUI.updateNumber(
+		clusters_attributes_table[device_attribute_size_number], 0);
 	ESPUI.updateNumber(clusters_attributes_table[device_config_min_number], 0);
 	ESPUI.updateNumber(clusters_attributes_table[device_config_max_number], 0);
 	ESPUI.updateNumber(clusters_attributes_table[device_config_delta_number], 0);
@@ -4304,12 +4348,12 @@ void enableClustersAttributesControls(bool enable) {
 					 controls_enabled_flags &= ~CLUSTERS_ATTRIBUTES_CONTROLS_ENABLED_FLAG;
 }
 
-void updateDeviceInfoLabel() {
+void updateDeviceInfoLabel(uint8_t device_slot) {
 
 	//char general_purpose_gui_buffer[1024] = {};
-	char ieee_addr_str[24] 		= {};
+	char ieee_addr_str[24] = {};
 
-	uint8_t device_slot = ESPUI.getControl(device_selector)->getValueInt();
+	//uint8_t device_slot = ESPUI.getControl(device_selector)->getValueInt();
 
   sprintf_P(ieee_addr_str, 
 						PSTR("%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X"), 
@@ -4397,9 +4441,13 @@ void deviceSelectorCallback(Control *sender, int type) {
 
 	//char general_purpose_gui_buffer[1024] = {};
 
-	if (/*(!isNumber(sender->getValue())) ||*/ 
-			(sender->getValueInt() < 0) || 
-			(sender->getValueInt() >= Z2S_ZB_DEVICES_MAX_NUMBER)) {
+	int sender_value = type;
+	
+	if (sender)
+		sender_value = sender->getValueInt();
+
+	if ((sender_value < 0) || 
+			(sender_value >= Z2S_ZB_DEVICES_MAX_NUMBER)) {
 
 		enableDeviceControls(false);
 		return;
@@ -4407,16 +4455,21 @@ void deviceSelectorCallback(Control *sender, int type) {
 	
 	enableDeviceControls(true);
 
-	updateDeviceInfoLabel();
+	updateDeviceInfoLabel(sender_value);
 }
 
 void clustersattributesdeviceSelectorCallback(Control *sender, int type) {
 
 	//char general_purpose_gui_buffer[1024] = {};
 
+	int sender_value = type;
+	
+	if (sender)
+		sender_value = sender->getValueInt();
+
 	if (/*(!isNumber(sender->getValue())) ||*/ 
-			(sender->getValueInt() < 0) || 
-			(sender->getValueInt() >= Z2S_ZB_DEVICES_MAX_NUMBER)) { 
+			(sender_value < 0) || 
+			(sender_value >= Z2S_ZB_DEVICES_MAX_NUMBER)) { 
 
 		enableClustersAttributesControls(false);
 		clusterCallbackCmd();
@@ -4425,7 +4478,7 @@ void clustersattributesdeviceSelectorCallback(Control *sender, int type) {
 		
 		enableClustersAttributesControls(true);
 
-		uint8_t device_slot = sender->getValueInt();
+		uint8_t device_slot = sender_value;
 
 		sprintf_P(general_purpose_gui_buffer,
 							PSTR("<b><i>Manufacturer name</i></b> %s "
@@ -4433,8 +4486,9 @@ void clustersattributesdeviceSelectorCallback(Control *sender, int type) {
 							Z2S_getZbDeviceManufacturerName(device_slot),
 							Z2S_getZbDeviceModelName(device_slot));
 
-		updateLabel_P(clusters_attributes_table[clusters_attributes_device_info_label], 
-									general_purpose_gui_buffer);
+		updateLabel_P(
+			clusters_attributes_table[clusters_attributes_device_info_label], 
+			general_purpose_gui_buffer);
 		clusterCallbackCmd();
 	}
 
@@ -4682,7 +4736,6 @@ void updateChannelInfoLabel(uint8_t label_number, int16_t channel_slot) {
 	char ieee_addr_str[24] 		= {};
 
 	if (channel_slot == -2)
-	//uint8_t 
 		channel_slot = ESPUI.getControl(channel_selector)->getValueInt();
 
 	log_i("channel slot %i", channel_slot);
@@ -4918,6 +4971,15 @@ void updateChannelInfoLabel(uint8_t label_number, int16_t channel_slot) {
 			enableChannelTimings(0);
 			enableChannelFlags(16);
 			enableChannelParams(3);
+
+			char *working_str_ptr = PSTR(
+				"&#10023; Enter GPM temporary deactivation threshold value &#10023;");
+
+			ESPUI.updateLabel(param_1_desc_label, working_str_ptr);
+
+			working_str_ptr = PSTR(
+					"&#10023; Enter GPM temporary deactivation duration [s] &#10023;");
+				ESPUI.updateLabel(param_2_desc_label, working_str_ptr);
 		} break;
 		
 		
@@ -5157,14 +5219,11 @@ void getClustersAttributesQueryCallback(Control *sender, int type, void *param) 
 		uint8_t attribute_type_idx = 
 			ESPUI.getControl(clusters_attributes_table[device_attribute_type_selector])->getValueInt();
 
-		uint8_t attribute_type = 
-			attribute_type_idx < 0xFF ? 
-				zigbee_datatypes[attribute_type_idx].zigbee_datatype_id : 
-				0xFF;
+		uint8_t attribute_type = attribute_type_idx < 0xFF ? 
+			zigbee_datatypes[attribute_type_idx].zigbee_datatype_id : 0xFF;
 
-		bool sync_cmd = 
-			ESPUI.getControl(
-				clusters_attributes_table[device_async_switcher])->getValueInt() == 0;
+		bool sync_cmd = ESPUI.getControl(
+			clusters_attributes_table[device_async_switcher])->getValueInt() == 0;
 
 		uint8_t manuf_specific = (ESPUI.getControl(
 			clusters_attributes_table[manufacturer_code_switcher])->getValueInt() == 0) ? 0 : 1;
@@ -5337,19 +5396,32 @@ void getClustersAttributesQueryCallback(Control *sender, int type, void *param) 
 				uint16_t delta = ESPUI.getControl(
 					clusters_attributes_table[device_config_delta_number])->getValueInt();
 
-				bool result = zbGateway.setClusterReporting(
-					&device, 
-					cluster_id, 
-					attribute_id, 
-					attribute_type, 
-					min_interval, 
-					max_interval, 
-					delta, 
-					sync_cmd,
-					ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV, 
-					1, 
-					manuf_specific, 
-					manuf_code);
+				float delta_f = delta;
+				uint8_t delta_8 = delta;
+				void *delta_ptr = &delta;
+
+				switch (attribute_type) {
+
+
+					case ESP_ZB_ZCL_ATTR_TYPE_SINGLE:
+						
+						delta_ptr = &delta_f;
+					break;
+
+
+					case ESP_ZB_ZCL_ATTR_TYPE_U8:
+					case ESP_ZB_ZCL_ATTR_TYPE_S8:
+					case ESP_ZB_ZCL_ATTR_TYPE_8BITMAP:
+					case ESP_ZB_ZCL_ATTR_TYPE_8BIT_ENUM:
+
+						delta_ptr = &delta_8;
+					break;
+				} 
+
+				bool result = zbGateway.setClusterReportingExt(
+					&device, cluster_id, attribute_id, attribute_type, min_interval,
+					max_interval, delta_ptr, sync_cmd, ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV, 
+					1, manuf_specific, manuf_code);
 					
 				if (result) {
 					if (*zbGateway.getConfigReportStatusLastResult() == ESP_ZB_ZCL_STATUS_SUCCESS) {
@@ -5790,7 +5862,9 @@ void removeChannelCallback(Control *sender, int type) {
 
 			if (Z2S_removeChannel(channel_slot, true)) {
 
-				ESPUI.updateControlValue(gui_control_id, -2);
+				removeChannelsSelectorChannel(channel_slot, gui_control_id);
+
+				/*ESPUI.updateControlValue(gui_control_id, -2);
 
 				int16_t next_channel_slot = 
 					Z2S_findChannelNumberNextSlot(channel_slot);
@@ -5800,7 +5874,7 @@ void removeChannelCallback(Control *sender, int type) {
 				else
 					ESPUI.updateSelect(channel_selector, (long int)-1);
 
-				channelSelectorCallback(nullptr, next_channel_slot);
+				channelSelectorCallback(nullptr, next_channel_slot);*/
 
 				sprintf_P(
 					general_purpose_gui_buffer, PSTR(
@@ -6037,13 +6111,43 @@ void editDeviceCallback(Control *sender, int type, void *param) {
 					
 				if (Z2S_saveZbDevicesTable()) {
 
-					//rebuildDevicesSelector();
-					/*log_i("%d, %s", z2s_zb_devices_table[device_slot].device_gui_id, 
-								z2s_zb_devices_table[device_slot].device_local_name);*/
 					ESPUI.updateControlLabel(
 						z2s_zb_devices_table[device_slot].device_gui_id, 
 						z2s_zb_devices_table[device_slot].device_local_name);
-					//ESPUI.jsonDom(0);
+					
+					if (clusters_attributes_table[clusters_attributes_device_selector] <
+						  0xFFFF) {
+						
+						Control *first_option_id = ESPUI.getFirstOptionId(
+							clusters_attributes_table[clusters_attributes_device_selector],
+							device_slot);
+						if (first_option_id)
+							ESPUI.updateControlLabel(
+								first_option_id->GetId(), 
+								z2s_zb_devices_table[device_slot].device_local_name);
+					}
+
+					if (advanced_device_selector < 0xFFFF) {
+						
+						Control *first_option_id = ESPUI.getFirstOptionId(
+							advanced_device_selector, device_slot);
+						if (first_option_id)
+							ESPUI.updateControlLabel(
+								first_option_id->GetId(), 
+								z2s_zb_devices_table[device_slot].device_local_name);
+					}
+					
+					if (Tuya_devices_tab_controls_table[Tuya_device_selector] < 0xFFFF) {
+						
+						Control *first_option_id = ESPUI.getFirstOptionId(
+							Tuya_devices_tab_controls_table[Tuya_device_selector], 
+							device_slot);
+
+						if (first_option_id)
+							ESPUI.updateControlLabel(
+								first_option_id->GetId(), 
+								z2s_zb_devices_table[device_slot].device_local_name);
+					}
 				}
 			} break;
 		}
@@ -6141,11 +6245,32 @@ void editChannelCallback(Control *sender, int type, void *param) {
 						z2s_channels_table[channel_slot].gui_control_id, 
 						z2s_channels_table[channel_slot].Supla_channel_name);
 
-					ESPUI.updateControlLabel(
-						z2s_channels_table[channel_slot].gui_control_id, 
-						z2s_channels_table[channel_slot].Supla_channel_name);
+					//if (channel_selector_first_option_id < 0xFFFF)
+					if ((channel_selector < 0xFFFF) || 
+							(action_source_channel_selector < 0xFFFF))
+						ESPUI.updateControlLabel(
+							z2s_channels_table[channel_slot].gui_control_id, 
+							z2s_channels_table[channel_slot].Supla_channel_name);
 					
-					//ESPUI.jsonDom(0);
+
+					/*uint16_t actions_channels_selectors_option_index =
+						channel_selector_first_option_id < 0xFFFF ? 
+							z2s_channels_table[channel_slot].gui_control_id -
+							channel_selector_first_option_id : 
+							z2s_channels_table[channel_slot].gui_control_id;
+
+					if (action_source_channel_selector_first_option_id < 0xFFFF) {
+
+						ESPUI.updateControlLabel(
+							action_source_channel_selector_first_option_id +
+							actions_channels_selectors_option_index, 
+							z2s_channels_table[channel_slot].Supla_channel_name);
+
+						ESPUI.updateControlLabel(
+							action_destination_channel_selector_first_option_id +
+							actions_channels_selectors_option_index, 
+							z2s_channels_table[channel_slot].Supla_channel_name);
+					} */
 				}
 			} break;
 
@@ -6601,10 +6726,7 @@ void attributeCallback (Control *sender, int type) {
 		uint16_t cluster_id = ESPUI.getControl(
 			clusters_attributes_table[device_cluster_selector])->getValueInt();
 
-		//device_attribute_value_selector_first_option_id = 0xFFFF;
-		//device_attribute_value_selector_last_option_id	= 0xFFFF;
-
-		//uint16_t current_option_id = 0xFFFF;
+		uint8_t values_counter = 0;
 
 		for (uint32_t i = 0; i < zigbee_attribute_values_count; i++) {
 
@@ -6612,20 +6734,26 @@ void attributeCallback (Control *sender, int type) {
 					(zigbee_attribute_values[i].zigbee_attribute_id == 
 					 zigbee_attributes[zigbee_attributes_idx].zigbee_attribute_id)) {
 
-				/*current_option_id = ESPUI.addControl(
-					Control::Type::Option, 
-					zigbee_attribute_values[i].zigbee_attribute_value_name, 
-					i, Control::Color::None, 
-					clusters_attributes_table[device_attribute_value_selector]);*/
+				ESPUI.updateControlLabel(
+					device_attribute_value_selector_first_option_id + values_counter,
+					zigbee_attribute_values[i].zigbee_attribute_value_name);
+				
 				ESPUI.updateControlValue(
-					device_attribute_value_selector_first_option_id + i, i);
-
-				//if (device_attribute_value_selector_first_option_id == 0xFFFF)
-				//	device_attribute_value_selector_first_option_id = current_option_id;
-			} else 
-				ESPUI.updateControlValue(
-					device_attribute_value_selector_first_option_id + i, -2);
+					device_attribute_value_selector_first_option_id + values_counter, i);
+				
+				values_counter++;
+			}
 		}
+
+		log_i(
+			"%u values added for attribute 0x%04X", values_counter, cluster_id,
+			zigbee_attributes[zigbee_attributes_idx].zigbee_attribute_id);
+
+		for (uint8_t i = values_counter; i < max_attribute_value_selector_options;
+				 i++)
+			ESPUI.updateControlValue(
+				device_attribute_value_selector_first_option_id + i, -2);
+
 		ESPUI.updateNumber(
 			clusters_attributes_table[device_attribute_value_text], 0);
 	} else {
@@ -6642,7 +6770,7 @@ void attributeCallback (Control *sender, int type) {
 		uint32_t zigbee_attribute_values_count = 
 			sizeof(zigbee_attribute_values) / sizeof(zigbee_attribute_value_t);
 
-		for (uint32_t i = 0; i < zigbee_attribute_values_count; i++) {
+		for (uint32_t i = 0; i < max_attribute_value_selector_options; i++) {
 
 			ESPUI.updateControlValue(
 				device_attribute_value_selector_first_option_id + i, -2);
@@ -6680,11 +6808,13 @@ void advancedDeviceSelectorCallback(Control *sender, int type) {
 
 	//char general_purpose_gui_buffer[1024] = {};
 
-	log_i("value = %s(%u)", sender->getValueCstr(), sender->getValueInt());
+	int sender_value = type;
 	
-	if (/*(!isNumber(sender->getValue())) ||*/ 
-			(sender->getValueInt() < 0) || 
-			(sender->getValueInt() >= Z2S_ZB_DEVICES_MAX_NUMBER)) {
+	if (sender)
+		sender_value = sender->getValueInt();
+	
+	if ((sender_value < 0) || 
+			(sender_value >= Z2S_ZB_DEVICES_MAX_NUMBER)) {
 
 		updateLabel_C(advanced_device_info_label, three_dots_str);
 
@@ -6697,32 +6827,36 @@ void advancedDeviceSelectorCallback(Control *sender, int type) {
 		return;
 	}
 	
-	uint8_t device_slot = sender->getValueInt();
+	uint8_t device_slot = sender_value;
 
-	if (z2s_zb_devices_table[device_slot].desc_id == Z2S_DEVICE_DESC_SONOFF_SMART_VALVE)
+	if (z2s_zb_devices_table[device_slot].desc_id == 
+				Z2S_DEVICE_DESC_SONOFF_SMART_VALVE)
 		enableSonoffValveGUI(true);
 	else {
 		if (isSonoffValvePresent)
 			enableSonoffValveGUI(false);
 	}
 	
-	if (z2s_zb_devices_table[device_slot].desc_id == Z2S_DEVICE_DESC_TUYA_GAS_DETECTOR)
+	if (z2s_zb_devices_table[device_slot].desc_id == 
+				Z2S_DEVICE_DESC_TUYA_GAS_DETECTOR)
 		enableTuyaGasDetectorGUI(true);
 	else {
 		if (isSonoffValvePresent)
 			enableTuyaGasDetectorGUI(false);
 	}
-	if (z2s_zb_devices_table[device_slot].desc_id == Z2S_DEVICE_DESC_MOES_ALARM)
+	if (z2s_zb_devices_table[device_slot].desc_id == 
+				Z2S_DEVICE_DESC_MOES_ALARM)
 		enableMoesAlarmGUI(true);
 	else {
 		if (isMoesAlarmPresent)
 			enableMoesAlarmGUI(false);
 	}
 
-	sprintf_P(general_purpose_gui_buffer,PSTR("<b><i>Manufacturer name</i></b> %s "
-					"<b>| <i>model ID</b></i> %s"), 
-					Z2S_getZbDeviceManufacturerName(device_slot),
-					Z2S_getZbDeviceModelName(device_slot));
+	sprintf_P(
+		general_purpose_gui_buffer,PSTR("<b><i>Manufacturer name</i></b> %s "
+		"<b>| <i>model ID</b></i> %s"), 
+		Z2S_getZbDeviceManufacturerName(device_slot),
+		Z2S_getZbDeviceModelName(device_slot));
 
 	updateLabel_P(advanced_device_info_label, general_purpose_gui_buffer);
 }
@@ -7609,27 +7743,33 @@ void TuyaDeviceSelectorCallback(Control *sender, int type) {
 
 	//char general_purpose_gui_buffer[1024] = {};
 
-	int16_t device_slot = sender->getValueInt();
+	int sender_value = type;
+	
+	if (sender)
+		sender_value = sender->getValueInt();
+
+	int16_t device_slot = sender_value;
 
 	if (device_slot >=0) {
 
 		enableTuyaDevicesControls(true);
 
-		sprintf_P(general_purpose_gui_buffer,
-							PSTR("<b><i>Manufacturer name</i></b> %s "
-							"<b>| <i>model ID</b></i> %s"), 
-							Z2S_getZbDeviceManufacturerName(device_slot),
-							Z2S_getZbDeviceModelName(device_slot));
+		sprintf_P(
+			general_purpose_gui_buffer, PSTR("<b><i>Manufacturer name</i></b> %s "
+			"<b>| <i>model ID</b></i> %s"), 
+			Z2S_getZbDeviceManufacturerName(device_slot),
+			Z2S_getZbDeviceModelName(device_slot));
 
-		updateLabel_P(Tuya_devices_tab_controls_table[Tuya_device_info_label], 
-									general_purpose_gui_buffer);
+		updateLabel_P(
+			Tuya_devices_tab_controls_table[Tuya_device_info_label], 
+			general_purpose_gui_buffer);
 		
 		rebuildTuyaDevicesDatapointsList(device_slot);
 
 		
 	} else {
 
-		//rebuildTuyaDevicesDatapointsList(0xFF);
+		rebuildTuyaDevicesDatapointsList(0xFF);
 		enableTuyaDevicesControls(false);	
 	}
 }

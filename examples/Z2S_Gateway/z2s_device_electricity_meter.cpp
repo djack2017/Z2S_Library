@@ -1,6 +1,7 @@
 #include "z2s_device_electricity_meter.h"
 
-//============================================================================
+/*---------------------------------------------------------------------------------------------------------------------------*/
+
 void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway, 
                                    zbg_device_params_t *device, 
                                    int16_t channel_number_slot) {
@@ -166,6 +167,7 @@ void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway,
       energy_divisor  = 1000;
 
       ignore_zigbee_scaling = true;
+
     } break;
 
     case Z2S_DEVICE_DESC_TUYA_DIN_BREAKER_EM_TEMP: {
@@ -183,6 +185,7 @@ void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway,
       energy_divisor  = 100;
 
       ignore_zigbee_scaling = true;
+
     } break;
 
     case Z2S_DEVICE_DESC_DEVELCO_RELAY_ELECTRICITY_METER: {
@@ -197,6 +200,7 @@ void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway,
       active_power_divisor    = 1000;*/
 
       ignore_zigbee_scaling = false;
+
     } break;
 
 
@@ -309,7 +313,8 @@ void initZ2SDeviceElectricityMeter(ZigbeeGateway *gateway,
   Supla_Z2S_ElectricityMeter->setEnergyDivisor(energy_divisor, false);
 }
 
-//============================================================================
+/*---------------------------------------------------------------------------------------------------------------------------*/
+
 void addZ2SDeviceElectricityMeter(
   ZigbeeGateway *gateway, zbg_device_params_t *device, bool isTuya, 
   bool active_query, uint8_t free_slot, int8_t sub_id, bool one_phase) {
@@ -331,7 +336,8 @@ void addZ2SDeviceElectricityMeter(
     (uint8_t*)&channel_extended_data_em);
 }
 
-//============================================================================
+/*---------------------------------------------------------------------------------------------------------------------------*/
+
 void updateZ2SDeviceElectricityMeter(int16_t channel_number_slot) {
 
   channel_extended_data_em_t channel_extended_data_em = {};
@@ -347,7 +353,8 @@ void updateZ2SDeviceElectricityMeter(int16_t channel_number_slot) {
     log_i("EM channel extended data successfully UPDATED (counters zeroed)"); 
 }
 
-//============================================================================
+/*---------------------------------------------------------------------------------------------------------------------------*/
+
 void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot, 
                                   uint8_t emv_selector, 
                                   int64_t em_value) {
@@ -363,108 +370,163 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
        
         Supla_ElectricityMeter->pong();
         
-//      log_i("selector 0x%x, value %lld", emv_selector, em_value);
-//        printf("selector 0x%x, value %lld\n", emv_selector, em_value);
+        log_i("selector 0x%x, value %lld", emv_selector, em_value);
         
         switch (emv_selector) {
           
-          case Z2S_EM_VOLTAGE_A_SEL: 		//0x0000
-			printf("selector 0x%x, value %lld\n", emv_selector, em_value);
-			Supla_ElectricityMeter->setVoltage2(0, em_value); break;
 
-          case Z2S_EM_CURRENT_A_SEL: 		//0x0001
-			printf("selector 0x%x, value %lld\n", emv_selector, em_value);
-            Supla_ElectricityMeter->setCurrent2(0, abs(em_value)); break;
+          case Z2S_EM_VOLTAGE_A_SEL: 
+            
+            Supla_ElectricityMeter->setVoltage2(0, em_value); break;
 
-          case Z2S_EM_ACTIVE_POWER_A_SEL:	//0x0002
-			printf("selector 0x%x, value %lld\n", emv_selector, em_value);
+
+          case Z2S_EM_CURRENT_A_SEL: 
+
+              Supla_ElectricityMeter->setCurrent2(0, abs(em_value)); break;
+
+
+          case Z2S_EM_ACTIVE_POWER_A_SEL: 
+          
             Supla_ElectricityMeter->setPowerActive2(0, em_value); break;
 
-          case Z2S_EM_ACT_FWD_ENERGY_A_SEL: //0x0003
+
+          case Z2S_EM_ACT_FWD_ENERGY_A_SEL: 
+          
             Supla_ElectricityMeter->setFwdActEnergy2(0, em_value); break;
 
-          case Z2S_EM_ACT_RVR_ENERGY_A_SEL: //0x0004
+
+          case Z2S_EM_ACT_RVR_ENERGY_A_SEL: 
+              
             Supla_ElectricityMeter->setRvrActEnergy2(0, em_value); break;
 
-          case Z2S_EM_POWER_FACTOR_A_SEL: 	//0x0005
+
+          case Z2S_EM_POWER_FACTOR_A_SEL: 
+          
             Supla_ElectricityMeter->setPowerFactor(0, em_value * 1000); break;
 
-          case Z2S_EM_REACTIVE_POWER_A_SEL: //0x0006
+
+          case Z2S_EM_REACTIVE_POWER_A_SEL: 
+            
             Supla_ElectricityMeter->setPowerReactive(0, em_value * 100000); break;
+          
 
 
           case Z2S_EM_VOLTAGE_B_SEL: 
+            
             Supla_ElectricityMeter->setVoltage2(1, em_value); break;
           
+          
           case Z2S_EM_CURRENT_B_SEL: 
+            
             Supla_ElectricityMeter->setCurrent2(1, abs(em_value)); break;
           
+          
           case Z2S_EM_ACTIVE_POWER_B_SEL: 
+          
             Supla_ElectricityMeter->setPowerActive2(1, em_value); break;
           
+          
           case Z2S_EM_ACT_FWD_ENERGY_B_SEL: 
+          
             Supla_ElectricityMeter->setFwdActEnergy2(1, em_value); break;
           
+          
           case Z2S_EM_ACT_RVR_ENERGY_B_SEL: 
+          
             Supla_ElectricityMeter->setRvrActEnergy2(1, em_value); break;
           
+          
           case Z2S_EM_POWER_FACTOR_B_SEL: 
+            
             Supla_ElectricityMeter->setPowerFactor(1, em_value * 1000); break;
 
 
+
           case Z2S_EM_VOLTAGE_C_SEL: 
+            
             Supla_ElectricityMeter->setVoltage2(2, em_value); break;
 
+
           case Z2S_EM_CURRENT_C_SEL: 
+          
             Supla_ElectricityMeter->setCurrent2(2, abs(em_value)); break;
 
+
           case Z2S_EM_ACTIVE_POWER_C_SEL: 
+            
             Supla_ElectricityMeter->setPowerActive2(2, em_value); break;
 
+
           case Z2S_EM_ACT_FWD_ENERGY_C_SEL: 
+          
             Supla_ElectricityMeter->setFwdActEnergy2(2, em_value); break;
 
+
           case Z2S_EM_ACT_RVR_ENERGY_C_SEL: 
+          
             Supla_ElectricityMeter->setRvrActEnergy2(2, em_value); break;
 
+
           case Z2S_EM_POWER_FACTOR_C_SEL: 
+            
             Supla_ElectricityMeter->setPowerFactor(2, em_value * 1000); break;
 
 
-          case Z2S_EM_AC_FREQUENCY: 		//0x0030
-			printf("selector 0x%x, value %lld\n", emv_selector, em_value);
+
+          case Z2S_EM_AC_FREQUENCY: 
+            
             Supla_ElectricityMeter->setFreq2(em_value); break;
 
+
+
           case Z2S_EM_AC_VOLTAGE_MUL_SEL: 
+
             Supla_ElectricityMeter->setVoltageMultiplier(em_value); break;
           
+          
           case Z2S_EM_AC_VOLTAGE_DIV_SEL: 
+
             Supla_ElectricityMeter->setVoltageDivisor(em_value); break;
           
+          
           case Z2S_EM_AC_CURRENT_MUL_SEL: 
+
             Supla_ElectricityMeter->setCurrentMultiplier(em_value); break;
           
+          
           case Z2S_EM_AC_CURRENT_DIV_SEL: 
+
             Supla_ElectricityMeter->setCurrentDivisor(em_value); break;
           
+          
           case Z2S_EM_AC_ACTIVE_POWER_MUL_SEL:  
+
             Supla_ElectricityMeter->setActivePowerMultiplier(em_value); break;
           
+          
           case Z2S_EM_AC_ACTIVE_POWER_DIV_SEL:  
+
             Supla_ElectricityMeter->setActivePowerDivisor(em_value); break;
           
+          
           case Z2S_EM_AC_FREQUENCY_MUL_SEL: 
+
             Supla_ElectricityMeter->setFreqMultiplier(em_value); break;
           
+          
           case Z2S_EM_AC_FREQUENCY_DIV_SEL: 
+
             Supla_ElectricityMeter->setFreqDivisor(em_value); break;
           
+          
           case Z2S_EM_ACT_FWD_ENERGY_MUL_SEL: 
+
             Supla_ElectricityMeter->setEnergyMultiplier(em_value); break;
+          
         
           case Z2S_EM_ACT_FWD_ENERGY_DIV_SEL: 
+
             Supla_ElectricityMeter->setEnergyDivisor(em_value); break;
         }
     }
 }
-//============================================================================

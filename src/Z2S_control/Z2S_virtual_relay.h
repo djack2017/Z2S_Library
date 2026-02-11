@@ -24,6 +24,7 @@
 #include <supla/control/relay.h>
 #include "ZigbeeGateway.h"
 
+#include "Z2S_common.h"
 #include "Z2S_custom_actions_events.h"
 
 #define MAX_COMMAND_DATA_SIZE                         0x0B 
@@ -51,6 +52,10 @@
 
 #define Z2S_VIRTUAL_RELAY_FNC_TUYA_DP_RELAY           0x60
 
+#define Z2S_VIRTUAL_RELAY_FNC_LUMI_ATTRIBUTE_U8       0x70
+#define Z2S_VIRTUAL_RELAY_FNC_LUMI_ATTRIBUTE_BOOL     0x71
+#define Z2S_VIRTUAL_RELAY_FNC_LUMI_BUZZER_1_2         0x72
+
 static const uint32_t RELAY_FLAGS = 
   SUPLA_BIT_FUNC_CONTROLLINGTHEGATEWAYLOCK |
   SUPLA_BIT_FUNC_CONTROLLINGTHEGATE |
@@ -73,6 +78,9 @@ class Z2S_VirtualRelay : public Relay {
   Z2S_VirtualRelay(
     ZigbeeGateway *gateway, zbg_device_params_t *device,
     uint8_t z2s_function = Z2S_VIRTUAL_RELAY_FNC_NONE);
+
+  void setZ2SZbDevice(z2s_zb_device_params_t *z2s_zb_device);
+  z2s_zb_device_params_t *getZ2SZbDevice();
 
   void onInit() override;
   void turnOn(_supla_int_t duration = 0) override;
@@ -108,11 +116,12 @@ class Z2S_VirtualRelay : public Relay {
 
 
   bool state = false;
-  ZigbeeGateway *_gateway = nullptr;
+  //ZigbeeGateway *_gateway = nullptr;
   zbg_device_params_t 	_device;
 
+  z2s_zb_device_params_t *_z2s_zb_device = nullptr;
+
   uint8_t _z2s_function = Z2S_VIRTUAL_RELAY_FNC_NONE;
-  //uint8_t _z2s_function_data[MAX_COMMAND_DATA_SIZE];
   
   int8_t  _z2s_function_value_S8 = INT8_MAX; //0x7F
   int32_t _z2s_function_value_S32 = INT32_MAX;
