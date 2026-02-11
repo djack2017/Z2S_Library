@@ -63,7 +63,7 @@ uint16_t wifi_pass_text;
 uint16_t Supla_server;
 uint16_t Supla_email;
 uint16_t Supla_skip_certificate_switcher;
-//uint16_t zabbix_server_text;
+uint16_t zabbix_server_text;
 uint16_t save_button;
 uint16_t save_label;
 
@@ -81,7 +81,6 @@ uint16_t zigbee_installation_code_ieee_address;
 uint16_t factory_reset_switcher;
 //uint16_t factory_reset_button;
 uint16_t factory_reset_label;
-uint16_t zabbix_server_text_text;
 
 uint16_t devicestab;
 uint16_t device_selector;
