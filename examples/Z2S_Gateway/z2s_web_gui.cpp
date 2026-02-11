@@ -63,7 +63,7 @@ uint16_t wifi_pass_text;
 uint16_t Supla_server;
 uint16_t Supla_email;
 uint16_t Supla_skip_certificate_switcher;
-uint16_t zabbix_server_text;
+uint16_t Zabbix_server;
 uint16_t save_button;
 uint16_t save_label;
 
@@ -1187,11 +1187,10 @@ void buildCredentialsGUI() {
 	auto cfg = Supla::Storage::ConfigInstance();
   
 	if (cfg) {
-
-  	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-  	if (cfg->getWiFiSSID(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+		if (cfg->getWiFiSSID(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(wifi_ssid_text, general_purpose_gui_buffer);
-			
+	
 		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
 		if (cfg->getSuplaServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Supla_server, general_purpose_gui_buffer);
@@ -1199,7 +1198,7 @@ void buildCredentialsGUI() {
 		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
 		if (cfg->getEmail(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Supla_email, general_purpose_gui_buffer);
-
+	
 		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level == 2 ? 1 : 0);
 	}			
 }
@@ -1219,7 +1218,7 @@ void buildCredentialsZabbix() {
 		
 	//===========================================================
 	working_str = PSTR(empty_str);
-	zabbix_server_text = ESPUI.addControl(
+	Zabbix_server = ESPUI.addControl(
 		Control::Type::Text, PSTR("Zabbix server"), working_str, 
 		Control::Color::Emerald, wifitab, textCallback);
 	
@@ -1233,9 +1232,8 @@ void buildCredentialsZabbix() {
 	//===========================================================
   
 	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-	if (myCfg.getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0) {
-		ESPUI.updateText(zabbix_server_text, general_purpose_gui_buffer);
-	}	
+	if (myCfg.getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+		ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
 }
 //============================================================================
 //============================================================================
@@ -3782,11 +3780,11 @@ void Z2S_startWebGUIConfig() {
 		Control::Type::Separator, PSTR("Status"), empty_str, 
 		Control::Color::None);
 
-  ESPUI.addControl(
+	ESPUI.addControl(
 		Control::Type::Separator, PSTR("WiFi & Supla credentials"), empty_str, 
 		Control::Color::None);
 
-  working_str = empty_str;
+	working_str = empty_str;
 	wifi_ssid_text = ESPUI.addControl(
 		Control::Type::Text, PSTR("SSID"), working_str, 
 		Control::Color::Emerald, Control::noParent, textCallback);
@@ -3821,7 +3819,7 @@ void Z2S_startWebGUIConfig() {
 															Control::noParent, 
 															generalCallback);
 
-	zabbix_server_text = ESPUI.addControl(Control::Type::Text, 
+	Zabbix_server = ESPUI.addControl(Control::Type::Text, 
 															PSTR("Zabbix server"), 
 															working_str, 
 															Control::Color::Emerald, 
@@ -3875,27 +3873,23 @@ void Z2S_startWebGUIConfig() {
 	auto cfg = Supla::Storage::ConfigInstance();
   
 	if (cfg) {
-
-  	memset(
-			general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-  	if (cfg->getWiFiSSID(general_purpose_gui_buffer) && 
-			  strlen(general_purpose_gui_buffer) > 0)
+		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+		if (cfg->getWiFiSSID(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(wifi_ssid_text, general_purpose_gui_buffer);
 
-		memset(
-			general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-		if (cfg->getSuplaServer(general_purpose_gui_buffer) && 
-				strlen(general_purpose_gui_buffer) > 0)
+		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+		if (cfg->getSuplaServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Supla_server, general_purpose_gui_buffer);
 
-		memset(
-			general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-		if (cfg->getEmail(general_purpose_gui_buffer) && 
-				strlen(general_purpose_gui_buffer) > 0)
+		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+		if (cfg->getEmail(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Supla_email, general_purpose_gui_buffer);
 
 		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level);
 	}
+	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+	if (myCfg->getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+		ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
 
 	working_str = _enable_gui_on_start;
 	ESPUI.updateSelect(gui_mode_selector, _enable_gui_on_start); 
@@ -4164,17 +4158,11 @@ void enterWifiDetailsCallback(Control *sender, int type, void *param) {
 }
 
 //============================================================================
-//void enterZabbixDetailsCallback(Control *sender, int type, void *param) {
-//    if (type == B_UP) {
-//        myCfg.setZabbixServer(ESPUI.getControl(zabbix_server_text)->getValueCstr());
-//        myCfg.save();
-//    }
-//}
 void enterZabbixDetailsCallback(Control *sender, int type, void *param) {
     if ((type == B_UP) && data_ready) {
         auto cfg = Supla::Storage::ConfigInstance();
         if (cfg) {
-            myCfg.setZabbixServer(ESPUI.getControl(zabbix_server_text)->getValueCstr());
+            myCfg.setZabbixServer(ESPUI.getControl(Zabbix_server)->getValueCstr());
             myCfg.save();  // zapis do flash
             cfg->commit();
         }
