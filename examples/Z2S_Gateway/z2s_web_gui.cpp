@@ -63,7 +63,7 @@ uint16_t wifi_pass_text;
 uint16_t Supla_server;
 uint16_t Supla_email;
 uint16_t Supla_skip_certificate_switcher;
-//uint16_t Zabbix_server;
+//uint16_t zabbix_server_text;
 uint16_t save_button;
 uint16_t save_label;
 
@@ -81,7 +81,7 @@ uint16_t zigbee_installation_code_ieee_address;
 uint16_t factory_reset_switcher;
 //uint16_t factory_reset_button;
 uint16_t factory_reset_label;
-uint16_t zabbix_server_text;
+uint16_t zabbix_server_text_text;
 
 uint16_t devicestab;
 uint16_t device_selector;
@@ -592,6 +592,7 @@ void updateDeviceInfoLabel();
 void gatewayCallback(Control *sender, int type, void *param);
 void selectGuiModeCallback(Control *sender, int type);
 void enterWifiDetailsCallback(Control *sender, int type, void *param);
+void enterZabbixDetailsCallback(Control *sender, int type, void *param);
 void textCallback(Control *sender, int type);
 void generalCallback(Control *sender, int type);
 void onZigbeeTabCallback(Control *sender, int type);
@@ -1212,7 +1213,7 @@ void buildCredentialsZabbix() {
 		
 	//===========================================================
 	working_str = PSTR(empty_str);
-	Zabbix_server = ESPUI.addControl(
+	zabbix_server_text = ESPUI.addControl(
 		Control::Type::Text, PSTR("Zabbix server"), working_str, 
 		Control::Color::Emerald, wifitab, textCallback);
 	
@@ -1229,7 +1230,7 @@ void buildCredentialsZabbix() {
 	if (cfg) {
 		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
 		if (cfg->getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
-			ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
+			ESPUI.updateText(zabbix_server_text, general_purpose_gui_buffer);
 	}
 }
 //============================================================================
@@ -3816,7 +3817,7 @@ void Z2S_startWebGUIConfig() {
 															Control::noParent, 
 															generalCallback);
 
-	Zabbix_server = ESPUI.addControl(Control::Type::Text, 
+	zabbix_server_text = ESPUI.addControl(Control::Type::Text, 
 															PSTR("Zabbix server"), 
 															working_str, 
 															Control::Color::Emerald, 
@@ -4159,11 +4160,17 @@ void enterWifiDetailsCallback(Control *sender, int type, void *param) {
 }
 
 //============================================================================
+//void enterZabbixDetailsCallback(Control *sender, int type, void *param) {
+//    if (type == B_UP) {
+//        myCfg.setZabbixServer(ESPUI.getControl(zabbix_server_text)->getValueCstr());
+//        myCfg.save();
+//    }
+//}
 void enterZabbixDetailsCallback(Control *sender, int type, void *param) {
     if ((type == B_UP) && data_ready) {
         auto cfg = Supla::Storage::ConfigInstance();
         if (cfg) {
-            myCfg.setZabbixServer(ESPUI.getControl(Zabbix_server)->getValueCstr());
+            myCfg.setZabbixServer(ESPUI.getControl(zabbix_server_text)->getValueCstr());
             myCfg.save();  // zapis do flash
             cfg->commit();
         }
