@@ -9,6 +9,7 @@
 #include "z2s_device_virtual_relay.h"
 #include "z2s_device_local_action_handler.h"
 #include "TuyaDatapoints.h"
+#include <Preferences.h>
 
 #include "z2s_version_info.h"
 
@@ -71,6 +72,7 @@ uint16_t wifi_pass_text;
 uint16_t Supla_server;
 uint16_t Supla_email;
 uint16_t Supla_skip_certificate_switcher;
+uint16_t Zabbix_server;
 uint16_t save_button;
 uint16_t save_label;
 
@@ -467,6 +469,50 @@ static constexpr char* clearFlagsLabelStyle PROGMEM =
 	"font-weight: normal;";
 
 //
+
+//===================================================================================
+class MyConfig {
+private:
+    char zabbixServer[64];
+
+public:
+    void setZabbixServer(const char* server) {
+        strncpy(zabbixServer, server, sizeof(zabbixServer) - 1);
+        zabbixServer[sizeof(zabbixServer) - 1] = '\0';
+    }
+
+	bool getZabbixServer(char* buffer) {
+		if (strlen(zabbixServer) == 0) return false;
+		strncpy(buffer, zabbixServer, sizeof(zabbixServer)-1);
+		buffer[sizeof(zabbixServer)-1] = '\0';
+		return true;
+	}
+
+//    const char* getZabbixServer() const {
+//        return zabbixServer;
+//    }
+
+    // Zapis do pamięci flash
+    void save() {
+		Preferences prefs;
+        prefs.begin("myconfig", false); // "myconfig" = namespace
+        prefs.putString("zabbixServer", zabbixServer);
+        prefs.end();
+    }
+
+    // Odczyt z pamięci flash
+    void load() {
+		Preferences prefs;
+        prefs.begin("myconfig", true);
+        String saved = prefs.getString("zabbixServer", "");
+        prefs.end();
+        strncpy(zabbixServer, saved.c_str(), sizeof(zabbixServer) - 1);
+        zabbixServer[sizeof(zabbixServer) - 1] = '\0';
+    }
+};
+
+MyConfig myCfg;
+//===================================================================================
 
 static const char* myCustomJS = R"=====(
 function myFunction() {
@@ -1009,8 +1055,8 @@ void updateLabel_C(Control::ControlId_t id, const char* value) {
 	ESPUI.updateLabel(id, working_str);
 }
 
-/*****************************************************************************/
-
+//============================================================================
+//============================================================================
 void buildGatewayTabGUI() {
 
 	//char general_purpose_gui_buffer[1024] = {};
@@ -1168,9 +1214,11 @@ void buildGatewayTabGUI() {
 		rebuild_Supla_channels_switcher, _rebuild_Supla_channels_on_start);
 	ESPUI.updateNumber(use_new_at_model_switcher, _use_new_at_model);
 }
+//============================================================================
+//============================================================================
 
-/*****************************************************************************/
-
+//============================================================================
+//============================================================================
 void buildCredentialsGUI() {
 
 	//char general_purpose_gui_buffer[1024] = {};
@@ -1237,7 +1285,45 @@ void buildCredentialsGUI() {
 		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level == 2 ? 1 : 0);
 	}			
 }
+//============================================================================
+//============================================================================
 
+//============================================================================
+// ZABBIX Config
+//============================================================================
+void buildCredentialsZabbix() {
+
+	//char general_purpose_gui_buffer[1024] = {};
+
+	char *working_str_ptr = PSTR("Zabbix config");
+	auto wifitab = ESPUI.addControl(
+		Control::Type::Tab, PSTR(empty_str), working_str_ptr);
+		
+	//===========================================================
+	working_str = PSTR(empty_str);
+	Zabbix_server = ESPUI.addControl(
+		Control::Type::Text, PSTR("Zabbix server"), working_str, 
+		Control::Color::Emerald, wifitab, textCallback);
+	
+	//===========================================================
+	working_str_ptr = PSTR("Save");
+	save_button = ESPUI.addControl(
+		Control::Type::Button, PSTR("Save"), working_str_ptr, 
+		Control::Color::Emerald, wifitab, enterZabbixDetailsCallback,
+		(void*)GUI_CB_SAVE_FLAG);
+
+	//===========================================================
+  
+	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+	if (myCfg.getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+		ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
+}
+//============================================================================
+//============================================================================
+
+//============================================================================
+// ZIGBEE SETTINGS
+//============================================================================
 void buildZigbeeTabGUI() {
 
 	char *working_str_ptr = PSTR("Zigbee settings");
@@ -3785,6 +3871,10 @@ void Z2S_buildWebGUI(gui_modes_t mode, uint32_t gui_custom_flags) {
 		buildCredentialsGUI();
 	}
 
+	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_CREDENTIALS) {
+		buildCredentialsZabbix();
+	}
+	
 	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_ZIGBEE) {
 		buildZigbeeTabGUI();
 	}
@@ -3887,18 +3977,26 @@ void Z2S_startWebGUIConfig() {
 
 	
 	Supla_skip_certificate_switcher = ESPUI.addControl(Control::Type::Switcher, 
-																										 PSTR("Skip CA certificate check"), 
-																										 (long int)0,
-																										 Control::Color::Emerald, 
-																										 Control::noParent, 
-																										 generalCallback);
+															PSTR("Skip CA certificate check"), 
+															(long int)0,
+															Control::Color::Emerald, 
+															Control::noParent, 
+															generalCallback);
+															
+	Zabbix_server = ESPUI.addControl(Control::Type::Text, 
+															PSTR("Zabbix server"), 
+															working_str, 
+															Control::Color::Emerald, 
+															Control::noParent, 
+															textCallback);
+
 
 	auto gui_mode_selector = ESPUI.addControl(Control::Type::Select, 
-									 												  PSTR("Select GUI mode (requires restart)"), 
-																		 				(long int)(long int)0, 
-																		 				Control::Color::Emerald, 
-																		 				Control::noParent, 
-																		 				selectGuiModeCallback);
+									 							PSTR("Select GUI mode (requires restart)"), 
+																(long int)(long int)0, 
+																Control::Color::Emerald, 
+																Control::noParent, 
+																selectGuiModeCallback);
 
 	for (uint8_t modes_counter = no_gui_mode; modes_counter < gui_modes_number; 
 	     modes_counter++) {
@@ -3962,9 +4060,17 @@ void Z2S_startWebGUIConfig() {
 		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level);
 	}
 
+	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+	if (myCfg.getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+		ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
+
 	working_str = _enable_gui_on_start;
 	ESPUI.updateSelect(gui_mode_selector, _enable_gui_on_start); 
 	ESPUI.updateNumber(gui_start_delay_number, _gui_start_delay);
+
+	printf("Supla server %s\n", Supla_server);
+	printf("EMAIL %s\n", Supla_email);
+	printf("Zabbix server %s\n", Zabbix_server);
 
 	ESPUI.begin("ZIGBEE <=> SUPLA CONFIG PAGE");
 	GUIstarted = true;
@@ -4209,6 +4315,19 @@ void enterWifiDetailsCallback(Control *sender, int type, void *param) {
 		}
 	}
 }
+
+//============================================================================
+void enterZabbixDetailsCallback(Control *sender, int type, void *param) {
+    if ((type == B_UP) && data_ready) {
+        auto cfg = Supla::Storage::ConfigInstance();
+        if (cfg) {
+            myCfg.setZabbixServer(ESPUI.getControl(Zabbix_server)->getValueCstr());
+            myCfg.save();  // zapis do flash
+            cfg->commit();
+        }
+    }
+}
+//============================================================================
 
 void textCallback(Control *sender, int type) {
 		
