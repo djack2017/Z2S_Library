@@ -9,6 +9,7 @@
 #include "z2s_device_virtual_relay.h"
 #include "z2s_device_local_action_handler.h"
 #include "TuyaDatapoints.h"
+#include <Preferences.h>
 
 #include "z2s_version_info.h"
 
@@ -80,6 +81,7 @@ uint16_t zigbee_installation_code_ieee_address;
 uint16_t factory_reset_switcher;
 //uint16_t factory_reset_button;
 uint16_t factory_reset_label;
+uint16_t zabbix_server_text;
 
 uint16_t devicestab;
 uint16_t device_selector;
@@ -512,7 +514,6 @@ public:
 };
 
 MyConfig myCfg;
-uint16_t zabbix_server_text;
 //===================================================================================
 
 static const char* myCustomJS = R"=====(
@@ -4162,7 +4163,7 @@ void enterZabbixDetailsCallback(Control *sender, int type, void *param) {
     if ((type == B_UP) && data_ready) {
         auto cfg = Supla::Storage::ConfigInstance();
         if (cfg) {
-            myCfg.setZabbixServer(ESPUI.getControl(zabbix_server_text)->getValueCstr());
+            myCfg.setZabbixServer(ESPUI.getControl(Zabbix_server)->getValueCstr());
             myCfg.save();  // zapis do flash
             cfg->commit();
         }
