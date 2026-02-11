@@ -491,9 +491,16 @@ public:
         zabbixServer[sizeof(zabbixServer) - 1] = '\0';
     }
 
-    const char* getZabbixServer() const {
-        return zabbixServer;
-    }
+	bool getZabbixServer(char* buffer) {
+		if (strlen(zabbixServer) == 0) return false;
+		strncpy(buffer, zabbixServer, 63);
+		buffer[63] = '\0';
+		return true;
+	}
+	
+//    const char* getZabbixServer() const {
+//        return zabbixServer;
+//    }
 
     // Zapis do pamięci flash
     void save() {
