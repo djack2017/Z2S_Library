@@ -1246,7 +1246,7 @@ void buildCredentialsGUI() {
 // ZABBIX Config
 //============================================================================
 void buildCredentialsZabbix() {
-
+	auto cfg = Supla::Storage::ConfigInstance();
 	char *working_str_ptr = PSTR("Zabbix config");
 	auto wifitab = ESPUI.addControl(
 		Control::Type::Tab, PSTR(empty_str), working_str_ptr);
