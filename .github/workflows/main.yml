@@ -4,6 +4,8 @@ jobs:
   build:
     name: Build and create release
     runs-on: ubuntu-latest
+    env:
+      EXTRA_FLAGS: "-DCORE_DEBUG_LEVEL=5" 
     steps:
       - name: Checkout
         uses: actions/checkout@master
