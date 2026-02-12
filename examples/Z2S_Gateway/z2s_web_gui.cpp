@@ -1255,7 +1255,7 @@ void buildCredentialsZabbix() {
 	working_str = PSTR(empty_str);
 	Zabbix_server = ESPUI.addControl(
 		Control::Type::Text, PSTR("Zabbix server"), working_str, 
-		Control::Color::Emerald, wifitab, textCallback);
+		Control::Color::Emerald, wifitab, Zabbix_textCallback);
 	
 	//===========================================================
 	working_str_ptr = PSTR("Save");
@@ -3904,11 +3904,11 @@ void Z2S_startWebGUIConfig() {
 		Control::Type::Separator, PSTR("Status"), empty_str, 
 		Control::Color::None);
 
-  ESPUI.addControl(
+	ESPUI.addControl(
 		Control::Type::Separator, PSTR("WiFi & Supla credentials"), empty_str, 
 		Control::Color::None);
 
-  working_str = empty_str;
+	working_str = empty_str;
 	wifi_ssid_text = ESPUI.addControl(
 		Control::Type::Text, PSTR("SSID"), working_str, 
 		Control::Color::Emerald, Control::noParent, textCallback);
@@ -3948,7 +3948,7 @@ void Z2S_startWebGUIConfig() {
 															working_str, 
 															Control::Color::Emerald, 
 															Control::noParent, 
-															textCallback);
+															Zabbix_textCallback);
 
 
 	auto gui_mode_selector = ESPUI.addControl(Control::Type::Select, 
@@ -4292,6 +4292,19 @@ void textCallback(Control *sender, int type) {
 		}
 }
 
+//============================================================================
+void Zabbix_textCallback(Control *sender, int type) {
+		
+		if ((ESPUI.getControl(Zabbix_Server)->getValue().length() > 0) {
+			ESPUI.updateLabel(save_label, PSTR("Data complete. Press Save"));
+			data_ready = true;
+		} else {
+			ESPUI.updateLabel(save_label, PSTR("Data incomplete!"));
+			data_ready = false;
+		}
+}
+
+//============================================================================
 void generalCallback(Control *sender, int type) {
 	
 	/*Serial.print("CB: id(");
