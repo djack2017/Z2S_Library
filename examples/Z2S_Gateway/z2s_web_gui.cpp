@@ -272,38 +272,38 @@ volatile uint8_t	remove_all_devices_counter = 2;
 #define GUI_COMMAND_DEVICE_NAME_CHANGE		10
 #define GUI_COMMAND_CHANNEL_NAME_CHANGE		11
 
-#define GUI_COMMAND_CLUSTER_ID_CHANGE			34
+#define GUI_COMMAND_CLUSTER_ID_CHANGE		34
 #define GUI_COMMAND_ATTRIBUTE_ID_CHANGE		35
 
-#define GUI_BUILD_CONTROL_FLAG_GATEWAY 			0x0001
+#define GUI_BUILD_CONTROL_FLAG_GATEWAY 		0x0001
 #define GUI_BUILD_CONTROL_FLAG_CREDENTIALS 	0x0002
-#define GUI_BUILD_CONTROL_FLAG_ZIGBEE 			0x0004
-#define GUI_BUILD_CONTROL_FLAG_DEVICES 			0x0008
-#define GUI_BUILD_CONTROL_FLAG_CHANNELS 		0x0010
-#define GUI_BUILD_CONTROL_FLAG_ACTIONS 			0x0020
-#define GUI_BUILD_CONTROL_FLAG_CA 					0x0040
-#define GUI_BUILD_CONTROL_FLAG_AD 					0x0080
-#define GUI_BUILD_CONTROL_FLAG_TCC 					0x0100
+#define GUI_BUILD_CONTROL_FLAG_ZIGBEE 		0x0004
+#define GUI_BUILD_CONTROL_FLAG_DEVICES 		0x0008
+#define GUI_BUILD_CONTROL_FLAG_CHANNELS 	0x0010
+#define GUI_BUILD_CONTROL_FLAG_ACTIONS 		0x0020
+#define GUI_BUILD_CONTROL_FLAG_CA 			0x0040
+#define GUI_BUILD_CONTROL_FLAG_AD 			0x0080
+#define GUI_BUILD_CONTROL_FLAG_TCC 			0x0100
 
 volatile uint32_t gui_build_control_flags = 0x00;
 
 
 volatile uint8_t controls_enabled_flags = 0xFF;
 
-#define DEVICES_CONTROLS_ENABLED_FLAG 															0x01
-#define CLUSTERS_ATTRIBUTES_CONTROLS_ENABLED_FLAG 									0x02
-#define CHANNELS_CONTROLS_ENABLED_FLAG 															0x04
-#define TUYA_DEVICES_ENABLED_FLAG																		0x08
+#define DEVICES_CONTROLS_ENABLED_FLAG 					0x01
+#define CLUSTERS_ATTRIBUTES_CONTROLS_ENABLED_FLAG 		0x02
+#define CHANNELS_CONTROLS_ENABLED_FLAG 					0x04
+#define TUYA_DEVICES_ENABLED_FLAG						0x08
 
 volatile uint32_t advanced_device_present_flags = 0x00;
 
-#define SONOFF_VALVE_PRESENT_FLAG																		0x01
-#define TUYA_GAS_DETECTOR_PRESENT_FLAG															0x02
-#define MOES_ALARM_PRESENT_FLAG																			0x04
+#define SONOFF_VALVE_PRESENT_FLAG						0x01
+#define TUYA_GAS_DETECTOR_PRESENT_FLAG					0x02
+#define MOES_ALARM_PRESENT_FLAG							0x04
 
 bool isSonoffValvePresent 		= false;
-bool isTuyaGasDetectorPresent = false;
-bool isMoesAlarmPresent				= false;
+bool isTuyaGasDetectorPresent 	= false;
+bool isMoesAlarmPresent			= false;
 
 volatile bool channels_selector_build_required = true;
 
@@ -318,21 +318,21 @@ volatile int16_t current_action_id = -1;
 volatile ActionGUIState current_action_gui_state = VIEW_ACTION;
 volatile ActionGUIState previous_action_gui_state = VIEW_ACTION;
 
-#define GUI_CB_ENABLE_GUI_FLAG										0x0100
-#define GUI_CB_FORCE_CONFIG_FLAG									0x0101
-#define GUI_CB_GUI_DELAY_FLAG											0x0102
-#define GUI_CB_SAVE_MDNS_NAME_FLAG								0x0103
-#define GUI_CB_REBUILD_CHANNELS_FLAG							0x0104
-#define GUI_CB_USE_NEW_AT_FLAG										0x0105
-#define GUI_CB_GUI_RESTART_FLAG										0x0106
+#define GUI_CB_ENABLE_GUI_FLAG						0x0100
+#define GUI_CB_FORCE_CONFIG_FLAG					0x0101
+#define GUI_CB_GUI_DELAY_FLAG						0x0102
+#define GUI_CB_SAVE_MDNS_NAME_FLAG					0x0103
+#define GUI_CB_REBUILD_CHANNELS_FLAG				0x0104
+#define GUI_CB_USE_NEW_AT_FLAG						0x0105
+#define GUI_CB_GUI_RESTART_FLAG						0x0106
 
 
-#define GUI_CB_SAVE_FLAG													0x1000
-#define GUI_CB_RESTART_FLAG												0x1001
+#define GUI_CB_SAVE_FLAG							0x1000
+#define GUI_CB_RESTART_FLAG							0x1001
 
-#define GUI_CB_PAIRING_FLAG												0x2001
-#define GUI_CB_FORCE_LEAVE_FLAG										0x2002
-#define GUI_CB_FACTORY_FLAG												0x2003
+#define GUI_CB_PAIRING_FLAG							0x2001
+#define GUI_CB_FORCE_LEAVE_FLAG						0x2002
+#define GUI_CB_FACTORY_FLAG							0x2003
 #define GUI_CB_GET_TX_FLAG												0x2004
 #define GUI_CB_SET_TX_FLAG												0x2005
 #define GUI_CB_GET_PC_FLAG												0x2006
@@ -471,49 +471,6 @@ static constexpr char* clearFlagsLabelStyle PROGMEM =
 //
 
 //===================================================================================
-class MyConfig {
-private:
-    char zabbixServer[64];
-
-public:
-    void setZabbixServer(const char* server) {
-        strncpy(zabbixServer, server, sizeof(zabbixServer) - 1);
-        zabbixServer[sizeof(zabbixServer) - 1] = '\0';
-    }
-
-	bool getZabbixServer(char* buffer) {
-		if (strlen(zabbixServer) == 0) return false;
-		strncpy(buffer, zabbixServer, sizeof(zabbixServer)-1);
-		buffer[sizeof(zabbixServer)-1] = '\0';
-		return true;
-	}
-
-//    const char* getZabbixServer() const {
-//        return zabbixServer;
-//    }
-
-    // Zapis do pamięci flash
-    void save() {
-		Preferences prefs;
-        prefs.begin("myconfig", false); // "myconfig" = namespace
-        prefs.putString("zabbixServer", zabbixServer);
-        prefs.end();
-    }
-
-    // Odczyt z pamięci flash
-    void load() {
-		Preferences prefs;
-        prefs.begin("myconfig", true);
-        String saved = prefs.getString("zabbixServer", "");
-        prefs.end();
-        strncpy(zabbixServer, saved.c_str(), sizeof(zabbixServer) - 1);
-        zabbixServer[sizeof(zabbixServer) - 1] = '\0';
-    }
-};
-
-MyConfig myCfg;
-//===================================================================================
-
 static const char* myCustomJS = R"=====(
 function myFunction() {
 	/*var a = document.createElement('a');
@@ -654,6 +611,7 @@ void fillMemoryUptimeInformation(char *buf);
 	return _dynamic_option_id++;
 }*/
 
+//===================================================================================
 uint16_t getMaxClusterAttributesNumber() {
 
 	uint16_t prev_cluster = 0xFFFF;
@@ -682,6 +640,7 @@ uint16_t getMaxClusterAttributesNumber() {
 	return max_counter;
 }
 
+//===================================================================================
 uint16_t getMaxAttributeValuesNumber() {
 
 	uint32_t prev_desc = 0;
@@ -716,6 +675,7 @@ uint16_t getMaxAttributeValuesNumber() {
 }
 
 
+//===================================================================================
 uint16_t getMaxTuyaDatapointsNumber() {
 
 	uint32_t prev_desc = 0;
@@ -750,8 +710,7 @@ uint16_t getMaxTuyaDatapointsNumber() {
 	return max_counter;
 }
 
-/*****************************************************************************/
-
+//===================================================================================
 void addEmptyLineLabel(uint16_t parent_id) {
 
 	ESPUI.setElementStyle(
@@ -761,6 +720,7 @@ void addEmptyLineLabel(uint16_t parent_id) {
 		PSTR(clearLabelStyle));
 }
 
+//===================================================================================
 void addFlagsLabel(const char* label, uint16_t parent_id) {
 
 	ESPUI.setElementStyle(
@@ -770,6 +730,7 @@ void addFlagsLabel(const char* label, uint16_t parent_id) {
 		PSTR(clearFlagsLabelStyle));
 }
 
+//===================================================================================
 uint16_t addClearLabel(const char* label, uint16_t parent_id) {
 
 	auto label_id = ESPUI.addControl(
@@ -779,8 +740,7 @@ uint16_t addClearLabel(const char* label, uint16_t parent_id) {
 	return label_id;
 }
 
-/*****************************************************************************/
-
+//===================================================================================
 bool isNumber(String& str) {
 
     unsigned int stringLength = str.length();
@@ -808,8 +768,7 @@ bool isNumber(String& str) {
     return true;
 }
 
-/*****************************************************************************/
-
+//===================================================================================
 const char* getSuplaChannelTypeName(int32_t channelType) {
 
 	switch (channelType) {
@@ -849,8 +808,7 @@ const char* getSuplaChannelTypeName(int32_t channelType) {
 	}
 }
 
-/*****************************************************************************/
-
+//===================================================================================
 const char* getSuplaChannelFuncName(int32_t channelType, int32_t channelFunc) {
 
 	switch (channelType) {
@@ -890,8 +848,7 @@ const char* getSuplaChannelFuncName(int32_t channelType, int32_t channelFunc) {
 	}*/
 }
 
-/*****************************************************************************/
-
+//===================================================================================
 const char* getZ2SDeviceDescName(uint32_t modelID)  {
 
 	switch (modelID) {
@@ -960,8 +917,7 @@ const char* getZ2SDeviceDescName(uint32_t modelID)  {
 	}
 }
 
-/*****************************************************************************/
-
+//===================================================================================
 const char* getZigbeeDataTypeName(uint8_t dataType)  {
 
 	uint32_t zigbee_datatypes_count = sizeof(zigbee_datatypes)/sizeof(zigbee_datatype_t);
@@ -974,8 +930,7 @@ const char* getZigbeeDataTypeName(uint8_t dataType)  {
 	return PSTR("Unknown data type");
 }
 
-/*****************************************************************************/
-
+//===================================================================================
 void fillGatewayGeneralnformation(char *buf) {
 
 	if (buf) {
@@ -1003,8 +958,7 @@ void fillGatewayGeneralnformation(char *buf) {
 	}
 }
 
-/*****************************************************************************/
-
+//===================================================================================
 void fillMemoryUptimeInformation(char *buf) {
 
 	if (buf) {
@@ -1027,8 +981,7 @@ void fillMemoryUptimeInformation(char *buf) {
 	}
 }
 
-/*****************************************************************************/
-
+//===================================================================================
 void enableControlStyle(uint16_t control_id, bool enable) {
 
 	ESPUI.setEnabled(control_id, enable);
@@ -1042,8 +995,7 @@ void enableControlStyle(uint16_t control_id, bool enable) {
 	}
 }
 
-/*****************************************************************************/
-
+//===================================================================================
 void updateLabel_P(Control::ControlId_t id, const char* value) {
 
 	working_str = value;
@@ -1219,6 +1171,7 @@ void buildGatewayTabGUI() {
 //============================================================================
 
 //============================================================================
+// SUPLA Config
 //============================================================================
 void buildCredentialsGUI() {
 
@@ -1294,8 +1247,6 @@ void buildCredentialsGUI() {
 //============================================================================
 void buildCredentialsZabbix() {
 
-	//char general_purpose_gui_buffer[1024] = {};
-
 	char *working_str_ptr = PSTR("Zabbix config");
 	auto wifitab = ESPUI.addControl(
 		Control::Type::Tab, PSTR(empty_str), working_str_ptr);
@@ -1316,7 +1267,7 @@ void buildCredentialsZabbix() {
 	//===========================================================
   
 	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-	if (myCfg.getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+	if (cfg->getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 		ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
 }
 //============================================================================
@@ -1440,9 +1391,10 @@ void buildZigbeeTabGUI() {
 	ESPUI.updateNumber(
 		force_leave_switcher, force_leave_global_flag ? 1 : 0);
 }
+//===================================================================================
+//===================================================================================
 
-/*****************************************************************************/
-
+//===================================================================================
 void removeDevicesSelectorDevice(uint8_t device_slot) {
 
 	if (device_selector < 0xFFFF) {
@@ -1498,8 +1450,7 @@ void removeDevicesSelectorDevice(uint8_t device_slot) {
 	}
 }
 
-/*****************************************************************************/
-
+//===================================================================================
 void removeChannelsSelectorChannel(
 	int16_t channel_number_slot,int32_t channel_option_id) {
 
@@ -1553,8 +1504,9 @@ void removeChannelsSelectorChannel(
 	}
 }
 
-/*****************************************************************************/
-
+//===================================================================================
+// DEVICE Config
+//===================================================================================
 void buildDevicesTabGUI() {
 
 	char *working_str_ptr = PSTR("Zigbee devices");
@@ -1728,9 +1680,10 @@ void buildDevicesTabGUI() {
 
 	enableDeviceControls(false);
 }
+//===================================================================================
+//===================================================================================
 
-/*****************************************************************************/
-
+//===================================================================================
 void rebuildChannelsSelector(
 	bool rebuild_channels_list, uint16_t channelstab = 0xFFFF) {
 
@@ -1792,9 +1745,11 @@ void rebuildChannelsSelector(
 	if (rebuild_channels_list)
 		channelSelectorCallback(ESPUI.getControl(channel_selector), SL_VALUE);
 }
+//===================================================================================
 
-/*****************************************************************************/
-
+//===================================================================================
+// CHANNEL Config
+//===================================================================================
 void buildChannelsTabGUI() {
 
 	char *working_str_ptr = PSTR("Zigbee channels");
@@ -2168,9 +2123,10 @@ void buildChannelsTabGUI() {
 
 	enableChannelControls(false);
 }
+//===================================================================================
+//===================================================================================
 
-/*****************************************************************************/
-
+//===================================================================================
 void buildClustersAttributesTab() {
 
 	char *working_str_ptr = PSTR("Clusters&Attributes");
@@ -3917,6 +3873,9 @@ void Z2S_reloadWebGUI() {
 
 }
 
+//============================================================================
+// WEBGUI CONFIG
+//============================================================================
 void Z2S_startWebGUIConfig() {
 
 	//char general_purpose_gui_buffer[1024] = {};
@@ -3955,26 +3914,26 @@ void Z2S_startWebGUIConfig() {
 		Control::Color::Emerald, Control::noParent, textCallback);
 
 	wifi_pass_text = ESPUI.addControl(Control::Type::Text, 
-																		"Password", 
-																		working_str, 
-																		Control::Color::Emerald, 
-																		Control::noParent, textCallback);
+															"Password", 
+															working_str, 
+															Control::Color::Emerald, 
+															Control::noParent, textCallback);
 
 	ESPUI.setInputType(wifi_pass_text, PSTR("password"));
 
 	Supla_server = ESPUI.addControl(Control::Type::Text, 
-																	PSTR("Supla server"), 
-																	working_str, 
-																	Control::Color::Emerald, 
-																	Control::noParent, 
-																	textCallback);
+															PSTR("Supla server"), 
+															working_str, 
+															Control::Color::Emerald, 
+															Control::noParent, 
+															textCallback);
 
 	Supla_email = ESPUI.addControl(Control::Type::Text, 
-																 "Supla email",
-																 working_str, 
-																 Control::Color::Emerald, 
-																 Control::noParent, 
-																 textCallback);
+															"Supla email",
+															working_str, 
+															Control::Color::Emerald, 
+															Control::noParent, 
+															textCallback);
 
 	
 	Supla_skip_certificate_switcher = ESPUI.addControl(Control::Type::Switcher, 
@@ -3993,11 +3952,11 @@ void Z2S_startWebGUIConfig() {
 
 
 	auto gui_mode_selector = ESPUI.addControl(Control::Type::Select, 
-									 							PSTR("Select GUI mode (requires restart)"), 
-																(long int)(long int)0, 
-																Control::Color::Emerald, 
-																Control::noParent, 
-																selectGuiModeCallback);
+									 						PSTR("Select GUI mode (requires restart)"), 
+															(long int)(long int)0, 
+															Control::Color::Emerald, 
+															Control::noParent, 
+															selectGuiModeCallback);
 
 	for (uint8_t modes_counter = no_gui_mode; modes_counter < gui_modes_number; 
 	     modes_counter++) {
@@ -4040,38 +3999,28 @@ void Z2S_startWebGUIConfig() {
   
 	if (cfg) {
 
-  	memset(
-			general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-  	if (cfg->getWiFiSSID(general_purpose_gui_buffer) && 
-			  strlen(general_purpose_gui_buffer) > 0)
+		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+		if (cfg->getWiFiSSID(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(wifi_ssid_text, general_purpose_gui_buffer);
 
-		memset(
-			general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-		if (cfg->getSuplaServer(general_purpose_gui_buffer) && 
-				strlen(general_purpose_gui_buffer) > 0)
+		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+		if (cfg->getSuplaServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Supla_server, general_purpose_gui_buffer);
 
-		memset(
-			general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-		if (cfg->getEmail(general_purpose_gui_buffer) && 
-				strlen(general_purpose_gui_buffer) > 0)
+		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+		if (cfg->getEmail(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Supla_email, general_purpose_gui_buffer);
+
+		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+		if (cfg->getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+			ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
 
 		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level);
 	}
 
-	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-	if (myCfg.getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
-		ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
-
 	working_str = _enable_gui_on_start;
 	ESPUI.updateSelect(gui_mode_selector, _enable_gui_on_start); 
 	ESPUI.updateNumber(gui_start_delay_number, _gui_start_delay);
-
-	printf("Supla server %s\n", Supla_server);
-	printf("EMAIL %s\n", Supla_email);
-	printf("Zabbix server %s\n", Zabbix_server);
 
 	ESPUI.begin("ZIGBEE <=> SUPLA CONFIG PAGE");
 	GUIstarted = true;
@@ -4294,18 +4243,15 @@ void Z2S_loopWebGUI() {
 	}
 }
 
+//============================================================================
 void enterWifiDetailsCallback(Control *sender, int type, void *param) {
-
 	if ((type == B_UP) && data_ready) {
-		
-    auto cfg = Supla::Storage::ConfigInstance();
-
+		auto cfg = Supla::Storage::ConfigInstance();
 		if (cfg) {
-
 			cfg->setWiFiSSID(ESPUI.getControl(wifi_ssid_text)->getValueCstr());
-  		cfg->setWiFiPassword(ESPUI.getControl(wifi_pass_text)->getValueCstr());
+			cfg->setWiFiPassword(ESPUI.getControl(wifi_pass_text)->getValueCstr());
 			cfg->setSuplaServer(ESPUI.getControl(Supla_server)->getValueCstr());
-		  cfg->setEmail(ESPUI.getControl(Supla_email)->getValueCstr());
+			cfg->setEmail(ESPUI.getControl(Supla_email)->getValueCstr());
 			cfg->setUInt8(
 				PSTR("security_level"), 
 				ESPUI.getControl(
@@ -4322,14 +4268,16 @@ void enterZabbixDetailsCallback(Control *sender, int type, void *param) {
     if ((type == B_UP) && data_ready) {
         auto cfg = Supla::Storage::ConfigInstance();
         if (cfg) {
-            myCfg.setZabbixServer(ESPUI.getControl(Zabbix_server)->getValueCstr());
-            myCfg.save();  // zapis do flash
+            cfg->setString(
+                PSTR("zabbix_server"),
+                ESPUI.getControl(Zabbix_server)->getValueCstr()
+            );
             cfg->commit();
         }
     }
 }
-//============================================================================
 
+//============================================================================
 void textCallback(Control *sender, int type) {
 		
 		if ((ESPUI.getControl(wifi_ssid_text)->getValue().length() > 0) &&
@@ -4860,7 +4808,7 @@ void updateChannelInfoLabel(uint8_t label_number, int16_t channel_slot) {
 
 	log_i("channel slot %i", channel_slot);
 
-  sprintf_P(ieee_addr_str, 
+	sprintf_P(ieee_addr_str, 
 						PSTR("%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X"), 
 						z2s_channels_table[channel_slot].ieee_addr[7],
 						z2s_channels_table[channel_slot].ieee_addr[6], 
@@ -5065,7 +5013,7 @@ void updateChannelInfoLabel(uint8_t label_number, int16_t channel_slot) {
 
 				log_i("remote address type = %s",Z2S_checkChannelFlags(
 					channel_slot, USER_DATA_FLAG_REMOTE_ADDRESS_TYPE_MDNS) ?
-      		"MDNS" : "IP4");
+				"MDNS" : "IP4");
 
 				fillRemoteAddressData(channel_slot);
 
@@ -6336,6 +6284,9 @@ uint8_t	saveRemoteChannelData(uint8_t channel_slot){
 		remote_Supla_channel;
 }
 
+//===================================================================================
+// CHANNEL Save
+//===================================================================================
 void editChannelCallback(Control *sender, int type, void *param) {
 
 	log_i("type = %u, param %lu", type, (uint32_t)param);
@@ -6519,7 +6470,9 @@ void editChannelCallback(Control *sender, int type, void *param) {
 		gui_callback_reentry_number--;
 	}
 }
+//===================================================================================
 
+//===================================================================================
 void editChannelFlagsCallback(Control *sender, int type, void *param) {
 
 	if (ESPUI.getControl(channel_selector)->getValueInt() >= 0) {
