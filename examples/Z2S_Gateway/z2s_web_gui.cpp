@@ -548,6 +548,7 @@ void selectGuiModeCallback(Control *sender, int type);
 void enterWifiDetailsCallback(Control *sender, int type, void *param);
 void enterZabbixDetailsCallback(Control *sender, int type, void *param);
 void textCallback(Control *sender, int type);
+void Zabbix_textCallback(Control *sender, int type);
 void generalCallback(Control *sender, int type);
 void onZigbeeTabCallback(Control *sender, int type);
 void onChannelsTabCallback(Control *sender, int type);
@@ -3880,6 +3881,14 @@ void Z2S_startWebGUIConfig() {
 
 	//char general_purpose_gui_buffer[1024] = {};
 	
+	auto cfg = Supla::Storage::ConfigInstance();
+	char buf[256] = {};
+	if (cfg && cfg->getString(PSTR("zabbix_server"), buf, sizeof(buf))) {
+		Serial.print("Zapisany Zabbix server: ");
+		Serial.println(buf);
+	}
+	
+	
 	fillGatewayGeneralnformation(general_purpose_gui_buffer);
 
 	ESPUI.addControl(
@@ -4280,22 +4289,22 @@ void enterZabbixDetailsCallback(Control *sender, int type, void *param) {
 //============================================================================
 void textCallback(Control *sender, int type) {
 		
-		if ((ESPUI.getControl(wifi_ssid_text)->getValue().length() > 0) &&
-				(ESPUI.getControl(wifi_pass_text)->getValue().length() > 0) &&
-				(ESPUI.getControl(Supla_server)->getValue().length() > 0) &&
-				(ESPUI.getControl(Supla_email)->getValue().length() > 0)) {
-			ESPUI.updateLabel(save_label, PSTR("Data complete. Press Save"));
-			data_ready = true;
-		} else {
-			ESPUI.updateLabel(save_label, PSTR("Data incomplete!"));
-			data_ready = false;
-		}
+	if ((ESPUI.getControl(wifi_ssid_text)->getValue().length() > 0) &&
+		(ESPUI.getControl(wifi_pass_text)->getValue().length() > 0) &&
+		(ESPUI.getControl(Supla_server)->getValue().length() > 0) &&
+		(ESPUI.getControl(Supla_email)->getValue().length() > 0)) {
+		ESPUI.updateLabel(save_label, PSTR("Data complete. Press Save"));
+		data_ready = true;
+	} else {
+		ESPUI.updateLabel(save_label, PSTR("Data incomplete!"));
+		data_ready = false;
+	}
 }
 
 //============================================================================
 void Zabbix_textCallback(Control *sender, int type) {
 		
-		if ((ESPUI.getControl(Zabbix_Server)->getValue().length() > 0) {
+		if (ESPUI.getControl(Zabbix_server)->getValue().length() > 0) {
 			ESPUI.updateLabel(save_label, PSTR("Data complete. Press Save"));
 			data_ready = true;
 		} else {
