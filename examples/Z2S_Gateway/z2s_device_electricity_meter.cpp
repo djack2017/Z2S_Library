@@ -369,44 +369,36 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
         auto Supla_ElectricityMeter = reinterpret_cast<Supla::Sensor::Z2S_ElectricityMeter *>(element);
        
         Supla_ElectricityMeter->pong();
+
+		log_i("i_selector 0x%x, value %lld", emv_selector, em_value);
+		printf("p_selector 0x%x, value %lld\n", emv_selector, em_value);
         
         log_i("selector 0x%x, value %lld", emv_selector, em_value);
         
         switch (emv_selector) {
           
+          case Z2S_EM_VOLTAGE_A_SEL: 		//0x0000
+			printf("selector 0x%x, value %lld\n", emv_selector, em_value);
+			Supla_ElectricityMeter->setVoltage2(0, em_value); break;
 
-          case Z2S_EM_VOLTAGE_A_SEL: 
-            
-            Supla_ElectricityMeter->setVoltage2(0, em_value); break;
+          case Z2S_EM_CURRENT_A_SEL: 		//0x0001
+			printf("selector 0x%x, value %lld\n", emv_selector, em_value);
+            Supla_ElectricityMeter->setCurrent2(0, abs(em_value)); break;
 
-
-          case Z2S_EM_CURRENT_A_SEL: 
-
-              Supla_ElectricityMeter->setCurrent2(0, abs(em_value)); break;
-
-
-          case Z2S_EM_ACTIVE_POWER_A_SEL: 
-          
+          case Z2S_EM_ACTIVE_POWER_A_SEL:	//0x0002
+			printf("selector 0x%x, value %lld\n", emv_selector, em_value);
             Supla_ElectricityMeter->setPowerActive2(0, em_value); break;
 
-
-          case Z2S_EM_ACT_FWD_ENERGY_A_SEL: 
-          
+          case Z2S_EM_ACT_FWD_ENERGY_A_SEL: //0x0003
             Supla_ElectricityMeter->setFwdActEnergy2(0, em_value); break;
 
-
-          case Z2S_EM_ACT_RVR_ENERGY_A_SEL: 
-              
+          case Z2S_EM_ACT_RVR_ENERGY_A_SEL: //0x0004
             Supla_ElectricityMeter->setRvrActEnergy2(0, em_value); break;
 
-
-          case Z2S_EM_POWER_FACTOR_A_SEL: 
-          
+          case Z2S_EM_POWER_FACTOR_A_SEL: 	//0x0005
             Supla_ElectricityMeter->setPowerFactor(0, em_value * 1000); break;
 
-
-          case Z2S_EM_REACTIVE_POWER_A_SEL: 
-            
+          case Z2S_EM_REACTIVE_POWER_A_SEL: //0x0006
             Supla_ElectricityMeter->setPowerReactive(0, em_value * 100000); break;
           
 
