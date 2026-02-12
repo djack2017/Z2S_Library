@@ -3886,6 +3886,7 @@ void Z2S_startWebGUIConfig() {
 	if (cfg && cfg->getString(PSTR("zabbix_server"), buf, sizeof(buf))) {
 		Serial.print("Zapisany Zabbix server: ");
 		Serial.println(buf);
+		printf("Zapisany Zabbix server: %s\n", buf);
 	}
 	
 	
@@ -4004,7 +4005,7 @@ void Z2S_startWebGUIConfig() {
 		Control::Type::Label, PSTR("Status"), "Missing data...", 
 		Control::Color::Emerald, save_button);
 
-	auto cfg = Supla::Storage::ConfigInstance();
+	//auto cfg = Supla::Storage::ConfigInstance();
   
 	if (cfg) {
 
