@@ -1265,9 +1265,9 @@ void buildCredentialsZabbix() {
 		(void*)GUI_CB_SAVE_FLAG);
 
 	//===========================================================
-  
+
 	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-	if (cfg->getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+	if (cfg->getString(PSTR("zabbix_server"), general_purpose_gui_buffer, sizeof(general_purpose_gui_buffer)) && strlen(general_purpose_gui_buffer) > 0)
 		ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
 }
 //============================================================================
@@ -4012,7 +4012,7 @@ void Z2S_startWebGUIConfig() {
 			ESPUI.updateText(Supla_email, general_purpose_gui_buffer);
 
 		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
-		if (cfg->getZabbixServer(general_purpose_gui_buffer) && strlen(general_purpose_gui_buffer) > 0)
+		if (cfg->getString(PSTR("zabbix_server"), general_purpose_gui_buffer, sizeof(general_purpose_gui_buffer)) && strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
 
 		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level);
