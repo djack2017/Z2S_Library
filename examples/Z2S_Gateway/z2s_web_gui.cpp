@@ -2,6 +2,9 @@
 
 #include <ZigbeeGateway.h>
 
+#define CORE_DEBUG_LEVEL 5
+#include "esp_log.h"
+
 #include "z2s_web_gui.h"
 #include "z2s_devices_database.h"
 #include "z2s_devices_table.h"
@@ -3884,11 +3887,8 @@ void Z2S_startWebGUIConfig() {
 	auto cfg = Supla::Storage::ConfigInstance();
 	char buf[256] = {};
 	if (cfg && cfg->getString(PSTR("zabbix_server"), buf, sizeof(buf))) {
-		Serial.print("Zapisany Zabbix server: ");
-		Serial.println(buf);
 		printf("Zapisany Zabbix server: %s\n", buf);
 	}
-	
 	
 	fillGatewayGeneralnformation(general_purpose_gui_buffer);
 
