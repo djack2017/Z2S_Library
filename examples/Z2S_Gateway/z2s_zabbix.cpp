@@ -3,9 +3,9 @@
 #include <supla/network/esp_wifi.h>
 
 //====================================================================================================
-String ZABBIX_host = "zabbix.djack.ovh"; // Zabbix IP Address
+//String ZABBIX_host = "zabbix.djack.ovh"; // Zabbix IP Address
 int ZABBIX_Port = 10051;              	 // Zabbix Port
-String ZABBIX_DEVICE = "bramka";          // HostName on Zabbix Server
+//String ZABBIX_DEVICE = "bramka";          // HostName on Zabbix Server
 //====================================================================================================
 
 //====================================================================================================

@@ -1,24 +1,12 @@
 #include "z2s_device_electricity_meter.h"
 #include "z2s_zabbix.h"
 
-//====================================================================================================
-/*
-  char key1[10];
-  char key2[10];
-  char key3[10];
-  char key4[10];
-  char host[20];
-
-  sprintf(host,"%s",ZABBIX_DEVICE);
-  sprintf(key1, "volt");
-  sprintf(key2, "curr");
-  sprintf(key3, "pow");
-  sprintf(key4, "frq");
-
-  zabbix_send4(host, key1, char_array, key2, sdata, key3, stime, key4, scode);
-}
-*/
-//====================================================================================================
+String ZABBIX_host = "zabbix.djack.ovh"; // Zabbix IP Address
+String ZABBIX_DEVICE = "bramka";          // HostName on Zabbix Server
+bool par1 = false;
+bool par2 = false;
+bool par3 = false;
+bool par4 = false;
 
 /*---------------------------------------------------------------------------------------------------------------------------*/
 
@@ -394,7 +382,15 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
           
           case Z2S_EM_VOLTAGE_A_SEL: 		//0x0000
 			printf("voltage 0x%x, value %lld\n", emv_selector, em_value);
-			Supla_ElectricityMeter->setVoltage2(0, em_value); break;
+			Supla_ElectricityMeter->setVoltage2(0, em_value);
+			char key1[6];
+			char volt[10];
+			char host[20];
+			sprintf(host,"%s",ZABBIX_DEVICE);
+			sprintf(key1, "volt");
+			sprintf(volt,"%s",em_value);
+			zabbix_send(host, key1, volt);
+			break;
 
           case Z2S_EM_CURRENT_A_SEL: 		//0x0001
 			printf("current 0x%x, value %lld\n", emv_selector, em_value);
@@ -491,5 +487,21 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
           case Z2S_EM_ACT_FWD_ENERGY_DIV_SEL: 
             Supla_ElectricityMeter->setEnergyDivisor(em_value); break;
         }
+		//-----------------------------------------------------------------------------
+//		if ((par1==true) and (par2==true) and (par3==true) and (par4==true)) {
+//			char key1[6];
+//			char key2[6];
+//			char key3[6];
+//			char key4[6];
+//			char host[20];
+//			sprintf(host,"%s",ZABBIX_DEVICE);
+//			sprintf(key1, "volt");
+//			sprintf(key2, "curr");
+//			sprintf(key3, "pow");
+//			sprintf(key4, "frq");
+//			zabbix_send4(host, key1, char_array, key2, sdata, key3, stime, key4, scode);
+//		}
+		//-----------------------------------------------------------------------------
+
     }
 }
