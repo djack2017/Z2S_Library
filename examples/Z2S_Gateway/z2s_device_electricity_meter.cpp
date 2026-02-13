@@ -386,9 +386,14 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
 			char volt[10];
 			char host[20];
 			sprintf(host,"%s",ZABBIX_DEVICE);
+			printf("voltage1\n");
 			sprintf(key1, "volt");
-			sprintf(volt,"%s",em_value);
+			printf("voltage2\n");
+//			sprintf(volt,"%s",em_value);
+			sprintf(volt,"240");
+			printf("voltage3\n");
 			zabbix_send(host, key1, volt);
+			printf("voltage4\n");
 			break;
 
           case Z2S_EM_CURRENT_A_SEL: 		//0x0001
