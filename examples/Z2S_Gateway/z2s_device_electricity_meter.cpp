@@ -1,4 +1,24 @@
 #include "z2s_device_electricity_meter.h"
+#include "z2s_zabbix.h"
+
+//====================================================================================================
+/*
+  char key1[10];
+  char key2[10];
+  char key3[10];
+  char key4[10];
+  char host[20];
+
+  sprintf(host,"%s",ZABBIX_DEVICE);
+  sprintf(key1, "volt");
+  sprintf(key2, "curr");
+  sprintf(key3, "pow");
+  sprintf(key4, "frq");
+
+  zabbix_send4(host, key1, char_array, key2, sdata, key3, stime, key4, scode);
+}
+*/
+//====================================================================================================
 
 /*---------------------------------------------------------------------------------------------------------------------------*/
 

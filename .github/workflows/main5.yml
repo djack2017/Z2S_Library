@@ -43,7 +43,7 @@ jobs:
       # -------------------------
       - name: Compile Gateway_4MB_logs
         working-directory: .
-        run: arduino-cli compile ./examples/Z2S_Gateway -b esp32:esp32:esp32c6:PartitionScheme=custom,ZigbeeMode=zczr,FlashSize=4M,CDCOnBoot=cdc -e --library=. --build-property compiler.cpp.extra_flags="${EXTRA_FLAGS}"
+        run: arduino-cli compile ./examples/Z2S_Gateway -b esp32:esp32:esp32c6:PartitionScheme=custom,ZigbeeMode=zczr,FlashSize=4M,CDCOnBoot=default -e --library=. --build-property compiler.cpp.extra_flags="$EXTRA_FLAGS"
       - name: Rename binaries 4MB_logs
         working-directory: .
         run: |
@@ -54,7 +54,7 @@ jobs:
       # -------------------------
       - name: Compile Gateway_4MB_no_logs
         working-directory: .
-        run: arduino-cli compile ./examples/Z2S_Gateway -b esp32:esp32:esp32c6:PartitionScheme=custom,ZigbeeMode=zczr,FlashSize=4M,CDCOnBoot=cdc -e --library=. --build-property compiler.cpp.extra_flags="${EXTRA_FLAGS}"
+        run: arduino-cli compile ./examples/Z2S_Gateway -b esp32:esp32:esp32c6:PartitionScheme=custom,ZigbeeMode=zczr,FlashSize=4M,CDCOnBoot=default -e --library=. --build-property compiler.cpp.extra_flags="$EXTRA_FLAGS"
       - name: Rename binaries 4MB_no_logs
         working-directory: .
         run: |
@@ -65,7 +65,7 @@ jobs:
       # -------------------------
       - name: Compile Gateway_8MB_logs
         working-directory: .
-        run: arduino-cli compile ./examples/Z2S_Gateway -b esp32:esp32:esp32c6:PartitionScheme=zigbee_zczr_8MB,ZigbeeMode=zczr,FlashSize=8M,CDCOnBoot=cdc,DebugLevel=verbose -e --library=. --build-property compiler.cpp.extra_flags="-DESPASYNCHTTPUPDATESERVER_MODE=1 ${EXTRA_FLAGS}"
+        run: arduino-cli compile ./examples/Z2S_Gateway -b esp32:esp32:esp32c6:PartitionScheme=zigbee_zczr_8MB,ZigbeeMode=zczr,FlashSize=8M,CDCOnBoot=default,DebugLevel=verbose -e --library=. --build-property compiler.cpp.extra_flags="-DESPASYNCHTTPUPDATESERVER_MODE=1 $EXTRA_FLAGS"
       - name: Rename binaries 8MB_logs
         working-directory: .
         run: |
@@ -76,7 +76,7 @@ jobs:
       # -------------------------
       - name: Compile Gateway_8MB_no_logs
         working-directory: .
-        run: arduino-cli compile ./examples/Z2S_Gateway -b esp32:esp32:esp32c6:PartitionScheme=zigbee_zczr_8MB,ZigbeeMode=zczr,FlashSize=8M,CDCOnBoot=cdc -e --library=. --build-property compiler.cpp.extra_flags="-DESPASYNCHTTPUPDATESERVER_MODE=1 ${EXTRA_FLAGS}"
+        run: arduino-cli compile ./examples/Z2S_Gateway -b esp32:esp32:esp32c6:PartitionScheme=zigbee_zczr_8MB,ZigbeeMode=zczr,FlashSize=8M,CDCOnBoot=default -e --library=. --build-property compiler.cpp.extra_flags="-DESPASYNCHTTPUPDATESERVER_MODE=1 $EXTRA_FLAGS"
       - name: Rename binaries 8MB_no_logs
         working-directory: .
         run: |
@@ -87,7 +87,7 @@ jobs:
       # -------------------------
       - name: Compile Scanner
         working-directory: .
-        run: arduino-cli compile ./examples/Z2S_Device_Scanner -b esp32:esp32:esp32c6:PartitionScheme=custom,ZigbeeMode=zczr,DebugLevel=verbose,CDCOnBoot=cdc -e --library=. --build-property compiler.cpp.extra_flags="${EXTRA_FLAGS}"
+        run: arduino-cli compile ./examples/Z2S_Device_Scanner -b esp32:esp32:esp32c6:PartitionScheme=custom,ZigbeeMode=zczr,DebugLevel=verbose,CDCOnBoot=default -e --library=. --build-property compiler.cpp.extra_flags="$EXTRA_FLAGS"
       - name: Bump version and push tag
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.2
