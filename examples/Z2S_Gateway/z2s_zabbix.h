@@ -6,8 +6,4 @@ void zabbix_send2(char *xhostname, char *item_key1, char *value_key1, char *item
 void zabbix_send4(char *xhostname, char *item_key1, char *value_key1, char *item_key2, char *value_key2, char *item_key3, char *value_key3, char *item_key4, char *value_key4);
 void zabbix_send6(char *xhostname, char *item_key1, char *value_key1, char *item_key2, char *value_key2, char *item_key3, char *value_key3, char *item_key4, char *value_key4, char *item_key5, char *value_key5, char *item_key6, char *value_key6);
 
-String ZABBIX_host = "zabbix.djack.ovh"; // Zabbix IP Address
-int ZABBIX_Port = 10051;              	 // Zabbix Port
-String ZABBIX_DEVICE = "bramka";          // HostName on Zabbix Server
-
 #endif // Z2S_ZABBIX
