@@ -133,16 +133,43 @@ void zabbix_send(const char *xhostname, const char *item_key, const char *value_
         printf("Error: NULL argument in zabbix_send\n");
         return;
     }
-    char buff[128];   // większy bufor
+    char buff[256];   // większy bufor
     memset(buff, 0, sizeof(buff));
     // Debug (czytelny)
     printf("Host: %s\nKey: %s\nValue: %s\n", xhostname, item_key, value_key);
-    // Bezpieczne formatowanie
-    snprintf(buff, sizeof(buff),
-             "{\"request\":\"sender data\",\"data\":[{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}]}",
-             xhostname, item_key, value_key);
-//    ZABBIX_Sender(buff, strlen(buff));
+    // Bezpieczne formatowanie JSON
+    int written = snprintf(
+        buff,
+        sizeof(buff),
+        "{\"request\":\"sender data\",\"data\":[{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}]}",
+        xhostname,
+        item_key,
+        value_key
+    );
+    // Sprawdzenie, czy bufor nie został obcięty
+    if (written < 0 || written >= sizeof(buff)) {
+        printf("Error: JSON buffer too small in zabbix_send\n");
+        return;
+    }
+    ZABBIX_Sender(buff, strlen(buff));
 }
+
+//void zabbix_send(const char *xhostname, const char *item_key, const char *value_key)
+//{
+//    if (!xhostname || !item_key || !value_key) {
+//        printf("Error: NULL argument in zabbix_send\n");
+//        return;
+//    }
+//    char buff[128];   // większy bufor
+//    memset(buff, 0, sizeof(buff));
+//    // Debug (czytelny)
+//    printf("Host: %s\nKey: %s\nValue: %s\n", xhostname, item_key, value_key);
+//    // Bezpieczne formatowanie
+//    snprintf(buff, sizeof(buff),
+//             "{\"request\":\"sender data\",\"data\":[{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}]}",
+//             xhostname, item_key, value_key);
+//    ZABBIX_Sender(buff, strlen(buff));
+//}
 
 //====================================================================================================
 // Wysłanie informacji do serwera ZABBIX (2 parametry)
