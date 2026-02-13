@@ -1,4 +1,7 @@
 #include <Arduino.h>
+#include <SuplaDevice.h>
+#include <supla/network/esp_wifi.h>
+
 //====================================================================================================
 String ZABBIX_host = "zabbix.djack.ovh"; // Zabbix IP Address
 int ZABBIX_Port = 10051;              	 // Zabbix Port
