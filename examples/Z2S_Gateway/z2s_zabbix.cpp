@@ -85,7 +85,7 @@ void ZABBIX_Sender(void *buf, int count) {
         if(debug_ZABBIX == 1) {
           printf("Zabbix Rx: ");
           for (int i=0; i <= ZABBIX_Liczba_RX; i++){
-            printf((char)ZABBIX_D_RX[i]);
+            printf("%c", ZABBIX_D_RX[i]);
           }
           printf("\n");
         }
