@@ -1,3 +1,4 @@
+#include <Arduino.h>
 //====================================================================================================
 String ZABBIX_host = "zabbix.djack.ovh"; // Zabbix IP Address
 int ZABBIX_Port = 10051;              	 // Zabbix Port
