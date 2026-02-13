@@ -383,14 +383,14 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
 			printf("voltage 0x%x, value %lld\n", emv_selector, em_value);
 			Supla_ElectricityMeter->setVoltage2(0, em_value);
 			char key1[6];
-			char volt[10];
+			char volt[16];
 			char host[20];
 			sprintf(host,"%s",ZABBIX_DEVICE);
 			printf("voltage1\n");
 			sprintf(key1, "volt");
 			printf("voltage2\n");
-//			sprintf(volt,"%s",em_value);
-			sprintf(volt,"240");
+			sprintf(volt,"%11d",em_value);
+//			sprintf(volt,"240");
 			printf("voltage3\n");
 			zabbix_send(host, key1, volt);
 			printf("voltage4\n");
