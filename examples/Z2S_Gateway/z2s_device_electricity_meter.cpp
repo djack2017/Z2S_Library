@@ -392,7 +392,7 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
 			sprintf(volt,"%11d",em_value);
 //			sprintf(volt,"240");
 			printf("voltage3\n");
-			zabbix_send(host, key1, volt);
+//			zabbix_send(host, key1, volt);
 			printf("voltage4\n");
 			break;
 
