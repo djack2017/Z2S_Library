@@ -1,8 +1,8 @@
 #include "z2s_device_electricity_meter.h"
 #include "z2s_zabbix.h"
 
-String ZABBIX_host = "zabbix.djack.ovh"; // Zabbix IP Address
-String ZABBIX_DEVICE = "bramka";          // HostName on Zabbix Server
+//String ZABBIX_host = "zabbix.djack.ovh"; // Zabbix IP Address
+//String ZABBIX_DEVICE = "bramka";          // HostName on Zabbix Server
 bool par1 = false;
 bool par2 = false;
 bool par3 = false;
