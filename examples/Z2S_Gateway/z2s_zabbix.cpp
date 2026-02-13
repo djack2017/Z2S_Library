@@ -120,7 +120,10 @@ void zabbix_send(char *xhostname, char *item_key, char *value_key) {
 
   char buff[80];
   memset(buff, 0, sizeof(buff));
-  sprintf(buff, "{\"request\":\"sender data\",\"data\":[{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}]}",xhostname,item_key,value_key);
+  printf("%s",xhostname);
+  printf("%s",item_key);
+  printf("%s",value_key);
+//  sprintf(buff, "{\"request\":\"sender data\",\"data\":[{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}]}",xhostname,item_key,value_key);
 //  ZABBIX_Sender(buff, strlen(buff));
 }
 
