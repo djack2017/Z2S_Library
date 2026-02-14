@@ -156,7 +156,7 @@ void zabbix_send(const char *xhostname, const char *item_key, const char *value_
         printf("Error: JSON buffer too small in zabbix_send\n");
         return;
     }
-//    ZABBIX_Sender(buff, strlen(buff));
+    ZABBIX_Sender(buff, strlen(buff));
 }
 
 //void zabbix_send(const char *xhostname, const char *item_key, const char *value_key)
