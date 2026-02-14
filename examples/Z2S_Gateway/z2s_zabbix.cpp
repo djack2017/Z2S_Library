@@ -10,7 +10,7 @@ int ZABBIX_Port = 10051;              	 // Zabbix Port
 //====================================================================================================
 
 //====================================================================================================
-#define debug_ZABBIX 1
+#define debug_ZABBIX 0
 //====================================================================================================
 
 byte ZABBIX_Liczba_RX;
@@ -74,9 +74,11 @@ void ZABBIX_Sender(void *buf, int count) {
       //}
       //printf("\n");
     }   
+    printf("Sender1\n");
   
     client.write(&header[0],count); 
 
+    printf("Sender2\n");
     while(timeout < 50000){    // Przerywamy polaczenie jesli timeout wynosi 50000 = 10 sekund
       ZABBIX_Liczba_RX = client.available();
       for (int i=1; i <= ZABBIX_Liczba_RX; i++) {
@@ -95,6 +97,7 @@ void ZABBIX_Sender(void *buf, int count) {
       delayMicroseconds(200);
       ++timeout;
     }
+    printf("Sender3\n");
 
     bool flaga_timeout = 0;
     if(timeout >= 50000){ // = 10 sekund
@@ -103,6 +106,7 @@ void ZABBIX_Sender(void *buf, int count) {
       flaga_timeout = 1;
     }
 
+    printf("Sender4\n");
     if (ZABBIX_D_RX[27] == 0x73 && ZABBIX_D_RX[28] == 0x75 && ZABBIX_D_RX[29] == 0x63 && ZABBIX_D_RX[30] == 0x63 && ZABBIX_D_RX[31] == 0x65 && ZABBIX_D_RX[32] == 0x73 && ZABBIX_D_RX[33] == 0x73) { 
       if(debug_ZABBIX == 1) {
         printf("Zabbix response: Success\n");
@@ -110,6 +114,7 @@ void ZABBIX_Sender(void *buf, int count) {
       }
     }
     client.stop();
+    printf("Sender5\n");
   }
 }
 
