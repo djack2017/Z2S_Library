@@ -15,6 +15,7 @@ char key2[6];
 char key3[6];
 char key4[6];
 char host[20];
+uint8_t xcounter=10;
 
 /*---------------------------------------------------------------------------------------------------------------------------*/
 
@@ -511,7 +512,11 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
 			sprintf(key2, "curr");
 			sprintf(key3, "pow");
 			sprintf(key4, "frq");
-			zabbix_send4(host, key1, xvolt, key2, xcurr, key3, xpow, key4, frq);
+			xcounter--;
+			if (xcounter<=0) {
+				zabbix_send4(host, key1, xvolt, key2, xcurr, key3, xpow, key4, frq);
+				xcounter=10;
+			}
 		}
 		//-----------------------------------------------------------------------------
 

@@ -1,5 +1,6 @@
 #include <NetworkClient.h>
 #include <ESPmDNS.h>
+#include "z2s_zabbix.h"
 
 #include "z2s_device_temphumidity.h"
 

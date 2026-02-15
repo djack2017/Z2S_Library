@@ -143,16 +143,24 @@ void zabbix_send(const char *xhostname, const char *item_key, const char *value_
 //====================================================================================================
 // Wysłanie informacji do serwera ZABBIX (2 parametry)
 //====================================================================================================
-void zabbix_send2(char *xhostname, char *item_key1, char *value_key1, char *item_key2, char *value_key2) {
+void zabbix_send2(const char *xhostname, const char *item_key1, const char *value_key1, const char *item_key2, const char *value_key2) {
 
-  char buff[160];
-  memset(buff, 0, sizeof(buff));
-  sprintf(buff, "{\"request\":\"sender data\",\"data\":[" \
-     "{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
-     "{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}]}", \
-     xhostname, item_key1, value_key1, \
-     xhostname, item_key2, value_key2);
-  ZABBIX_Sender(buff, strlen(buff));
+	if (!xhostname || !item_key1 || !value_key1 || !item_key2 || !value_key2) {
+        printf("Error: NULL argument in zabbix_send\n");
+        return;
+	}
+	char buff[160];
+	memset(buff, 0, sizeof(buff));
+	sprintf(buff, "{\"request\":\"sender data\",\"data\":[" \
+		"{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
+		"{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}]}", \
+		xhostname, item_key1, value_key1, \
+		xhostname, item_key2, value_key2);
+    if (written < 0 || written >= sizeof(buff)) {
+        printf("Error: JSON buffer too small in zabbix_send\n");
+        return;
+    }
+	ZABBIX_Sender(buff, strlen(buff));
 }
 
 //====================================================================================================
