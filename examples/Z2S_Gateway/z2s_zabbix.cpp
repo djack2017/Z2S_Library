@@ -15,10 +15,10 @@ int ZABBIX_Port = 10051;              	 // Zabbix Port
 
 byte ZABBIX_Liczba_RX;
 byte ZABBIX_Liczba_TX;
-#define ZABBIX_buffor 300
-byte ZABBIX_DATA[ZABBIX_buffor];
+#define ZABBIX_buffor 600
+//byte ZABBIX_DATA[ZABBIX_buffor];
 byte ZABBIX_D_RX[ZABBIX_buffor];
-byte ZABBIX_D_TX[ZABBIX_buffor];
+//byte ZABBIX_D_TX[ZABBIX_buffor];
 word xcode, source;
 char status[20];
 char sdata[20];
@@ -42,6 +42,12 @@ void ZABBIX_Sender(void *buf, int count) {
     word timeout = 0;
     printf("Connection to ZABBIX server successfully\n");
     ZABBIX_Liczba_RX = 0;
+
+    printf("Sender0 count:$d\n",count);
+	if (count + 13 > sizeof(header)) {
+		printf("ZABBIX ERROR: header buffer too small\n");
+		return;
+	}
 
     header[0]  = 'Z';
     header[1]  = 'B';
@@ -79,7 +85,8 @@ void ZABBIX_Sender(void *buf, int count) {
     client.write(&header[0],count); 
 
     printf("Sender2\n");
-    while(timeout < 50000){    // Przerywamy polaczenie jesli timeout wynosi 50000 = 10 sekund
+	
+/*    while(timeout < 50000){    // Przerywamy polaczenie jesli timeout wynosi 50000 = 10 sekund
       ZABBIX_Liczba_RX = client.available();
       for (int i=1; i <= ZABBIX_Liczba_RX; i++) {
         ZABBIX_D_RX[i] = client.read();
@@ -96,7 +103,7 @@ void ZABBIX_Sender(void *buf, int count) {
       }
       delayMicroseconds(200);
       ++timeout;
-    }
+    }*/
     printf("Sender3\n");
 
     bool flaga_timeout = 0;
@@ -107,12 +114,18 @@ void ZABBIX_Sender(void *buf, int count) {
     }
 
     printf("Sender4\n");
-    if (ZABBIX_D_RX[27] == 0x73 && ZABBIX_D_RX[28] == 0x75 && ZABBIX_D_RX[29] == 0x63 && ZABBIX_D_RX[30] == 0x63 && ZABBIX_D_RX[31] == 0x65 && ZABBIX_D_RX[32] == 0x73 && ZABBIX_D_RX[33] == 0x73) { 
-      if(debug_ZABBIX == 1) {
-        printf("Zabbix response: Success\n");
-        printf(" \n");
-      }
-    }
+	if (ZABBIX_Liczba_RX >= 34) {
+		if (memcmp(&ZABBIX_D_RX[27], "success", 7) == 0) {
+			printf("Zabbix response: Success\n");
+		}
+	}
+	
+//    if (ZABBIX_D_RX[27] == 0x73 && ZABBIX_D_RX[28] == 0x75 && ZABBIX_D_RX[29] == 0x63 && ZABBIX_D_RX[30] == 0x63 && ZABBIX_D_RX[31] == 0x65 && ZABBIX_D_RX[32] == 0x73 && ZABBIX_D_RX[33] == 0x73) { 
+//      if(debug_ZABBIX == 1) {
+//        printf("Zabbix response: Success\n");
+//        printf(" \n");
+//      }
+//    }
     client.stop();
     printf("Sender5\n");
   }
