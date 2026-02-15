@@ -6,9 +6,9 @@ bool flag0  =  false;
 bool flag1  = false;
 bool flag2  = false;
 bool flag30 = false;
-char volt[16];
-char curr[16];
-char pow[16];
+char xvolt[16];
+char xcurr[16];
+char xpow[16];
 char frq[10];
 
 /*---------------------------------------------------------------------------------------------------------------------------*/
@@ -386,22 +386,22 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
           case Z2S_EM_VOLTAGE_A_SEL: 		//0x0000
 			printf("voltage 0x%x, value %lld\n", emv_selector, em_value);
 			Supla_ElectricityMeter->setVoltage2(0, em_value);
-			snprintf(volt, sizeof(volt), "%d", (int)em_value);
-//			zabbix_send(host, key1, volt);
+			snprintf(xvolt, sizeof(xvolt), "%d", (int)em_value);
+//			zabbix_send(host, key1, xvolt);
 			flag0=true;
 			break;
 
           case Z2S_EM_CURRENT_A_SEL: 		//0x0001
 			printf("current 0x%x, value %lld\n", emv_selector, em_value);
             Supla_ElectricityMeter->setCurrent2(0, abs(em_value));
-			snprintf(curr, sizeof(curr), "%d", (int)em_value);
+			snprintf(xcurr, sizeof(xcurr), "%d", (int)em_value);
 			flag1=true;
 			break;
 
           case Z2S_EM_ACTIVE_POWER_A_SEL:	//0x0002
 			printf("power 0x%x, value %lld\n", emv_selector, em_value);
             Supla_ElectricityMeter->setPowerActive2(0, em_value);
-			snprintf(pow, sizeof(pow), "%d", (int)em_value);
+			snprintf(xpow, sizeof(xpow), "%d", (int)em_value);
 			flag2=true;
 			break;
 
@@ -507,7 +507,7 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
 			sprintf(key2, "curr");
 			sprintf(key3, "pow");
 			sprintf(key4, "frq");
-			zabbix_send4(host, key1, volt, key2, curr, key3, pow, key4, frq);
+			zabbix_send4(host, key1, xvolt, key2, xcurr, key3, xpow, key4, frq);
 			bool flag0  = false;
 			bool flag1  = false;
 			bool flag2  = false;
