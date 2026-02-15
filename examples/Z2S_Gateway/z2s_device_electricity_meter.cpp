@@ -507,8 +507,8 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
 			sprintf(key2, "curr");
 			sprintf(key3, "pow");
 			sprintf(key4, "frq");
-			zabbix_send4(host, key1, char_array, key2, sdata, key3, stime, key4, scode);
-			bool flag0  =  false;
+			zabbix_send4(host, key1, volt, key2, curr, key3, pow, key4, frq);
+			bool flag0  = false;
 			bool flag1  = false;
 			bool flag2  = false;
 			bool flag30 = false;
