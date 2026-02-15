@@ -151,7 +151,9 @@ void zabbix_send2(const char *xhostname, const char *item_key1, const char *valu
 	}
 	char buff[160];
 	memset(buff, 0, sizeof(buff));
-	sprintf(buff, "{\"request\":\"sender data\",\"data\":[" \
+    int written = snprintf(
+		buff, sizeof(buff),
+		"{\"request\":\"sender data\",\"data\":[" \
 		"{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
 		"{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}]}", \
 		xhostname, item_key1, value_key1, \
