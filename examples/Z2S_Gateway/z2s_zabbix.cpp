@@ -164,12 +164,11 @@ void zabbix_send4(const char *xhostname, const char *item_key1, const char *valu
         printf("Error: NULL argument in zabbix_send\n");
         return;
     }
-	char buff[280];
+	char buff[400];
 	memset(buff, 0, sizeof(buff));
     int written = snprintf(
 		buff, sizeof(buff),
 		"{\"request\":\"sender data\",\"data\":[" \
-		"{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
 		"{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
 		"{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
 		"{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
