@@ -2,7 +2,7 @@
 #include "z2s_zabbix.h"
 
 String ZABBIX_DEVICE = "bramka";          // HostName on Zabbix Server
-bool flag0  =  false;
+bool flag0  = false;
 bool flag1  = false;
 bool flag2  = false;
 bool flag30 = false;
@@ -10,6 +10,11 @@ char xvolt[16];
 char xcurr[16];
 char xpow[16];
 char frq[10];
+char key1[6];
+char key2[6];
+char key3[6];
+char key4[6];
+char host[20];
 
 /*---------------------------------------------------------------------------------------------------------------------------*/
 
@@ -496,18 +501,13 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
             Supla_ElectricityMeter->setEnergyDivisor(em_value); break;
         }
 		//-----------------------------------------------------------------------------
-		if ((flag0==true) and (flag1==true) and (flag2==true) and (flag30==true)) {
-			char key1[6];
-			char key2[6];
-			char key3[6];
-			char key4[6];
-			char host[20];
+		if ((flag0==true) && (flag1==true) && (flag2==true) && (flag30==true)) {
 			sprintf(host,"%s",ZABBIX_DEVICE);
 			sprintf(key1, "volt");
 			sprintf(key2, "curr");
 			sprintf(key3, "pow");
 			sprintf(key4, "frq");
-			zabbix_send4(host, key1, xvolt, key2, xcurr, key3, xpow, key4, frq);
+//			zabbix_send4(host, key1, xvolt, key2, xcurr, key3, xpow, key4, frq);
 			bool flag0  = false;
 			bool flag1  = false;
 			bool flag2  = false;

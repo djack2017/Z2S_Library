@@ -158,7 +158,7 @@ void zabbix_send2(char *xhostname, char *item_key1, char *value_key1, char *item
 //====================================================================================================
 // Wysłanie informacji do serwera ZABBIX (4 parametry)
 //====================================================================================================
-void zabbix_send4(char *xhostname, char *item_key1, char *value_key1, char *item_key2, char *value_key2, char *item_key3, char *value_key3, char *item_key4, char *value_key4) {
+void zabbix_send4(const char *xhostname, const char *item_key1, const char *value_key1, const char *item_key2, const char *value_key2, const char *item_key3, const char *value_key3, const char *item_key4, const char *value_key4) {
 
     if (!xhostname || !item_key1 || !value_key1 || !item_key2 || !value_key2 || !item_key3 || !value_key3 || !item_key4 || !value_key4) {
         printf("Error: NULL argument in zabbix_send\n");
