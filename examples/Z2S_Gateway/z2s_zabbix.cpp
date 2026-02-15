@@ -14,15 +14,7 @@ int ZABBIX_Port = 10051;              	 // Zabbix Port
 //====================================================================================================
 
 byte ZABBIX_Liczba_RX;
-byte ZABBIX_Liczba_TX;
-#define ZABBIX_buffor 600
-//byte ZABBIX_DATA[ZABBIX_buffor];
-byte ZABBIX_D_RX[ZABBIX_buffor];
-//byte ZABBIX_D_TX[ZABBIX_buffor];
-word xcode, source;
-char status[20];
-char sdata[20];
-char message[64];
+byte ZABBIX_D_RX[600];
 
 //====================================================================================================
 // Zabbix Sender
@@ -43,7 +35,7 @@ void ZABBIX_Sender(void *buf, int count) {
     printf("Connection to ZABBIX server successfully\n");
     ZABBIX_Liczba_RX = 0;
 
-    printf("Sender0 count:$d\n",count);
+    printf("Sender0 count:%d\n",count);
 	if (count + 13 > sizeof(header)) {
 		printf("ZABBIX ERROR: header buffer too small\n");
 		return;
@@ -80,13 +72,10 @@ void ZABBIX_Sender(void *buf, int count) {
       //}
       //printf("\n");
     }   
-    printf("Sender1\n");
-  
+
     client.write(&header[0],count); 
 
-    printf("Sender2\n");
-	
-/*    while(timeout < 50000){    // Przerywamy polaczenie jesli timeout wynosi 50000 = 10 sekund
+	/*    while(timeout < 50000){    // Przerywamy polaczenie jesli timeout wynosi 50000 = 10 sekund
       ZABBIX_Liczba_RX = client.available();
       for (int i=1; i <= ZABBIX_Liczba_RX; i++) {
         ZABBIX_D_RX[i] = client.read();
@@ -104,7 +93,6 @@ void ZABBIX_Sender(void *buf, int count) {
       delayMicroseconds(200);
       ++timeout;
     }*/
-    printf("Sender3\n");
 
     bool flaga_timeout = 0;
     if(timeout >= 50000){ // = 10 sekund
@@ -113,7 +101,6 @@ void ZABBIX_Sender(void *buf, int count) {
       flaga_timeout = 1;
     }
 
-    printf("Sender4\n");
 	if (ZABBIX_Liczba_RX >= 34) {
 		if (memcmp(&ZABBIX_D_RX[27], "success", 7) == 0) {
 			printf("Zabbix response: Success\n");
@@ -127,67 +114,31 @@ void ZABBIX_Sender(void *buf, int count) {
 //      }
 //    }
     client.stop();
-    printf("Sender5\n");
   }
 }
 
 //====================================================================================================
 // Wysłanie informacji do serwera ZABBIX (1 parametr)
 //====================================================================================================
-//void zabbix_send(char *xhostname, char *item_key, char *value_key) {
-
-//  char buff[80];
-//  memset(buff, 0, sizeof(buff));
-//  printf("%s",xhostname);
-//  printf("%s",item_key);
-//  printf("%s",value_key);
-//  sprintf(buff, "{\"request\":\"sender data\",\"data\":[{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}]}",xhostname,item_key,value_key);
-//  ZABBIX_Sender(buff, strlen(buff));
-//}
-
 void zabbix_send(const char *xhostname, const char *item_key, const char *value_key)
 {
     if (!xhostname || !item_key || !value_key) {
         printf("Error: NULL argument in zabbix_send\n");
         return;
     }
-    char buff[256];   // większy bufor
+    char buff[256];
     memset(buff, 0, sizeof(buff));
-    // Debug (czytelny)
-    printf("Host: %s\nKey: %s\nValue: %s\n", xhostname, item_key, value_key);
-    // Bezpieczne formatowanie JSON
     int written = snprintf(
-        buff,
-        sizeof(buff),
+        buff, sizeof(buff),
         "{\"request\":\"sender data\",\"data\":[{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}]}",
-        xhostname,
-        item_key,
-        value_key
-    );
-    // Sprawdzenie, czy bufor nie został obcięty
+        xhostname, item_key, value_key
+		);
     if (written < 0 || written >= sizeof(buff)) {
         printf("Error: JSON buffer too small in zabbix_send\n");
         return;
     }
     ZABBIX_Sender(buff, strlen(buff));
 }
-
-//void zabbix_send(const char *xhostname, const char *item_key, const char *value_key)
-//{
-//    if (!xhostname || !item_key || !value_key) {
-//        printf("Error: NULL argument in zabbix_send\n");
-//        return;
-//    }
-//    char buff[128];   // większy bufor
-//    memset(buff, 0, sizeof(buff));
-//    // Debug (czytelny)
-//    printf("Host: %s\nKey: %s\nValue: %s\n", xhostname, item_key, value_key);
-//    // Bezpieczne formatowanie
-//    snprintf(buff, sizeof(buff),
-//             "{\"request\":\"sender data\",\"data\":[{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}]}",
-//             xhostname, item_key, value_key);
-//    ZABBIX_Sender(buff, strlen(buff));
-//}
 
 //====================================================================================================
 // Wysłanie informacji do serwera ZABBIX (2 parametry)
@@ -209,19 +160,29 @@ void zabbix_send2(char *xhostname, char *item_key1, char *value_key1, char *item
 //====================================================================================================
 void zabbix_send4(char *xhostname, char *item_key1, char *value_key1, char *item_key2, char *value_key2, char *item_key3, char *value_key3, char *item_key4, char *value_key4) {
 
-  char buff[280];
-  memset(buff, 0, sizeof(buff));
-  sprintf(buff, "{\"request\":\"sender data\",\"data\":[" \
-     "{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
-     "{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
-     "{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
-     "{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
-     "{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}]}", \
-     xhostname, item_key1, value_key1, \
-     xhostname, item_key2, value_key2, \
-     xhostname, item_key3, value_key3, \
-     xhostname, item_key4, value_key4);
-  ZABBIX_Sender(buff, strlen(buff));
+    if (!xhostname || !item_key1 || !value_key1 || !item_key2 || !value_key2 || !item_key3 || !value_key3 || !item_key4 || !value_key4) {
+        printf("Error: NULL argument in zabbix_send\n");
+        return;
+    }
+	char buff[280];
+	memset(buff, 0, sizeof(buff));
+    int written = snprintf(
+		buff, sizeof(buff),
+		"{\"request\":\"sender data\",\"data\":[" \
+		"{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
+		"{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
+		"{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
+		"{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}," \
+		"{\"host\":\"%s\",\"key\":\"%s\",\"value\":\"%s\"}]}", \
+		xhostname, item_key1, value_key1, \
+		xhostname, item_key2, value_key2, \
+		xhostname, item_key3, value_key3, \
+		xhostname, item_key4, value_key4);
+    if (written < 0 || written >= sizeof(buff)) {
+        printf("Error: JSON buffer too small in zabbix_send\n");
+        return;
+    }
+	ZABBIX_Sender(buff, strlen(buff));
 }
 
 //====================================================================================================

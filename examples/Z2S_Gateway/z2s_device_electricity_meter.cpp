@@ -2,10 +2,14 @@
 #include "z2s_zabbix.h"
 
 String ZABBIX_DEVICE = "bramka";          // HostName on Zabbix Server
-bool par1 = false;
-bool par2 = false;
-bool par3 = false;
-bool par4 = false;
+bool flag0  =  false;
+bool flag1  = false;
+bool flag2  = false;
+bool flag30 = false;
+char volt[16];
+char curr[16];
+char pow[16];
+char frq[10];
 
 /*---------------------------------------------------------------------------------------------------------------------------*/
 
@@ -382,29 +386,24 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
           case Z2S_EM_VOLTAGE_A_SEL: 		//0x0000
 			printf("voltage 0x%x, value %lld\n", emv_selector, em_value);
 			Supla_ElectricityMeter->setVoltage2(0, em_value);
-			char key1[6];
-			char volt[16];
-			char host[20];
-			sprintf(host,"%s",ZABBIX_DEVICE);
-			printf("voltage1\n");
-			sprintf(key1, "volt");
-			printf("voltage2\n");
-			sprintf(volt, "%d", em_value);
 			snprintf(volt, sizeof(volt), "%d", (int)em_value);
-//			snprintf(volt, sizeof(volt), "%lld", (long long)em_value);
-//			sprintf(volt,"240");
-			printf("voltage3\n");
-			zabbix_send(host, key1, volt);
-			printf("voltage4\n");
+//			zabbix_send(host, key1, volt);
+			flag0=true;
 			break;
 
           case Z2S_EM_CURRENT_A_SEL: 		//0x0001
 			printf("current 0x%x, value %lld\n", emv_selector, em_value);
-            Supla_ElectricityMeter->setCurrent2(0, abs(em_value)); break;
+            Supla_ElectricityMeter->setCurrent2(0, abs(em_value));
+			snprintf(curr, sizeof(curr), "%d", (int)em_value);
+			flag1=true;
+			break;
 
           case Z2S_EM_ACTIVE_POWER_A_SEL:	//0x0002
 			printf("power 0x%x, value %lld\n", emv_selector, em_value);
-            Supla_ElectricityMeter->setPowerActive2(0, em_value); break;
+            Supla_ElectricityMeter->setPowerActive2(0, em_value);
+			snprintf(pow, sizeof(pow), "%d", (int)em_value);
+			flag2=true;
+			break;
 
           case Z2S_EM_ACT_FWD_ENERGY_A_SEL: //0x0003
 			printf("energy 0x%x, value %lld\n", emv_selector, em_value);
@@ -460,8 +459,11 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
 
 
           case Z2S_EM_AC_FREQUENCY: 
-			printf("energy 0x%x, value %lld\n", emv_selector, em_value);
-            Supla_ElectricityMeter->setFreq2(em_value); break;
+			printf("frequency 0x%x, value %lld\n", emv_selector, em_value);
+            Supla_ElectricityMeter->setFreq2(em_value);
+			snprintf(frq, sizeof(frq), "%d", (int)em_value);
+			flag30=true;
+			break;
 
           case Z2S_EM_AC_VOLTAGE_MUL_SEL: 
             Supla_ElectricityMeter->setVoltageMultiplier(em_value); break;
@@ -494,19 +496,23 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
             Supla_ElectricityMeter->setEnergyDivisor(em_value); break;
         }
 		//-----------------------------------------------------------------------------
-//		if ((par1==true) and (par2==true) and (par3==true) and (par4==true)) {
-//			char key1[6];
-//			char key2[6];
-//			char key3[6];
-//			char key4[6];
-//			char host[20];
-//			sprintf(host,"%s",ZABBIX_DEVICE);
-//			sprintf(key1, "volt");
-//			sprintf(key2, "curr");
-//			sprintf(key3, "pow");
-//			sprintf(key4, "frq");
-//			zabbix_send4(host, key1, char_array, key2, sdata, key3, stime, key4, scode);
-//		}
+		if ((flag0==true) and (flag1==true) and (flag2==true) and (flag30==true)) {
+			char key1[6];
+			char key2[6];
+			char key3[6];
+			char key4[6];
+			char host[20];
+			sprintf(host,"%s",ZABBIX_DEVICE);
+			sprintf(key1, "volt");
+			sprintf(key2, "curr");
+			sprintf(key3, "pow");
+			sprintf(key4, "frq");
+			zabbix_send4(host, key1, char_array, key2, sdata, key3, stime, key4, scode);
+			bool flag0  =  false;
+			bool flag1  = false;
+			bool flag2  = false;
+			bool flag30 = false;
+		}
 		//-----------------------------------------------------------------------------
 
     }
