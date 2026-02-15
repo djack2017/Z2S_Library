@@ -502,16 +502,16 @@ void msgZ2SDeviceElectricityMeter(int16_t channel_number_slot,
         }
 		//-----------------------------------------------------------------------------
 		if ((flag0==true) && (flag1==true) && (flag2==true) && (flag30==true)) {
+			flag0  = false;
+			flag1  = false;
+			flag2  = false;
+			flag30 = false;
 			sprintf(host,"%s",ZABBIX_DEVICE);
 			sprintf(key1, "volt");
 			sprintf(key2, "curr");
 			sprintf(key3, "pow");
 			sprintf(key4, "frq");
 			zabbix_send4(host, key1, xvolt, key2, xcurr, key3, xpow, key4, frq);
-			bool flag0  = false;
-			bool flag1  = false;
-			bool flag2  = false;
-			bool flag30 = false;
 		}
 		//-----------------------------------------------------------------------------
 
