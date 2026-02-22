@@ -1,5 +1,4 @@
 #include "z2s_device_electricity_meter.h"
-
 #include "z2s_zabbix.h"
 
 bool flag  = false;
