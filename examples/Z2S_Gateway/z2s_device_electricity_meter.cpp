@@ -308,11 +308,8 @@ void initZ2SDeviceElectricityMeter(
   
   Supla_Z2S_ElectricityMeter->setIgnoreZigbeeScaling(ignore_zigbee_scaling);
 
-  Supla_Z2S_ElectricityMeter->setCurrentMultiplierModifier(
-    current_multiplier_modifier);
-
-  Supla_Z2S_ElectricityMeter->setCurrentDivisorModifier(
-    current_divisor_modifier);
+  Supla_Z2S_ElectricityMeter->setCurrentMultiplierModifier(current_multiplier_modifier);
+  Supla_Z2S_ElectricityMeter->setCurrentDivisorModifier(current_divisor_modifier);
 
   Supla_Z2S_ElectricityMeter->setVoltageMultiplier(voltage_multiplier, false);
   Supla_Z2S_ElectricityMeter->setVoltageDivisor(voltage_divisor, false);
@@ -320,15 +317,10 @@ void initZ2SDeviceElectricityMeter(
   Supla_Z2S_ElectricityMeter->setCurrentMultiplier(current_multiplier, false);
   Supla_Z2S_ElectricityMeter->setCurrentDivisor(current_divisor, false);
 
-  Supla_Z2S_ElectricityMeter->setActivePowerMultiplier(
-    active_power_multiplier, false);
+  Supla_Z2S_ElectricityMeter->setActivePowerMultiplier(active_power_multiplier, false);
+  Supla_Z2S_ElectricityMeter->setActivePowerDivisor(active_power_divisor, false);
 
-  Supla_Z2S_ElectricityMeter->setActivePowerDivisor(
-    active_power_divisor, false);
-
-  Supla_Z2S_ElectricityMeter->setFreqMultiplier(
-    ac_frequency_multiplier, false);
-
+  Supla_Z2S_ElectricityMeter->setFreqMultiplier(ac_frequency_multiplier, false);
   Supla_Z2S_ElectricityMeter->setFreqDivisor(ac_frequency_divisor, false);
 
   Supla_Z2S_ElectricityMeter->setEnergyMultiplier(energy_multiplier, false);
