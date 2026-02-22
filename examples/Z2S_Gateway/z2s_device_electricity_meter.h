@@ -14,7 +14,6 @@
 #define Z2S_EM_ACT_RVR_ENERGY_A_SEL    0x0004
 #define Z2S_EM_POWER_FACTOR_A_SEL      0x0005
 #define Z2S_EM_REACTIVE_POWER_A_SEL    0x0006
-#define Z2S_EM_APPARENT_POWER_A_SEL    0x0007
 
 #define Z2S_EM_VOLTAGE_B_SEL           0x0010
 #define Z2S_EM_CURRENT_B_SEL           0x0011
@@ -22,8 +21,6 @@
 #define Z2S_EM_ACT_FWD_ENERGY_B_SEL    0x0013
 #define Z2S_EM_POWER_FACTOR_B_SEL      0x0014
 #define Z2S_EM_ACT_RVR_ENERGY_B_SEL    0x0015
-#define Z2S_EM_REACTIVE_POWER_B_SEL    0x0016
-#define Z2S_EM_APPARENT_POWER_B_SEL    0x0017
 
 #define Z2S_EM_VOLTAGE_C_SEL           0x0020
 #define Z2S_EM_CURRENT_C_SEL           0x0021
@@ -31,8 +28,6 @@
 #define Z2S_EM_ACT_FWD_ENERGY_C_SEL    0x0023
 #define Z2S_EM_POWER_FACTOR_C_SEL      0x0024
 #define Z2S_EM_ACT_RVR_ENERGY_C_SEL    0x0025
-#define Z2S_EM_REACTIVE_POWER_C_SEL    0x0026
-#define Z2S_EM_APPARENT_POWER_C_SEL    0x0027
 
 #define Z2S_EM_AC_FREQUENCY            0x0030
 
@@ -47,9 +42,6 @@
 
 #define Z2S_EM_ACT_FWD_ENERGY_MUL_SEL  0x0048
 #define Z2S_EM_ACT_FWD_ENERGY_DIV_SEL  0x0049
-
-#define Z2S_EM_FWD_BALANCED_ENERGY_SEL 0x0050
-#define Z2S_EM_RVR_BALANCED_ENERGY_SEL 0x0051
 
 /*---------------------------------------------------------------------------------------------------------------------------*/
 
@@ -72,5 +64,9 @@ void updateZ2SDeviceElectricityMeter(int16_t channel_number_slot);
 
 void msgZ2SDeviceElectricityMeter(
   int16_t channel_number_slot, uint8_t selector, int64_t value);
+
+/*---------------------------------------------------------------------------------------------------------------------------*/
+
+int8_t findDeviceSlotByShortAddr(uint16_t short_addr);
 
 #endif

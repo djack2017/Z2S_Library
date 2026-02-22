@@ -17,7 +17,6 @@
 #include <supla/storage/storage.h>
 
 #include <supla/device/register_device.h>
-#include <supla/version.h>
 
 #include "web_gui_templates.h"
 
@@ -65,6 +64,7 @@ uint16_t gui_start_delay_number;
 //uint16_t gui_start_delay_save_button;
 uint16_t gateway_mdns_name_text;
 uint16_t rebuild_Supla_channels_switcher;
+uint16_t Zabbix_server;
 uint16_t use_new_at_model_switcher;
 
 uint16_t wifi_ssid_text;
@@ -81,7 +81,6 @@ uint16_t zigbee_tx_power_text;
 //uint16_t zigbee_get_tx_power_button;
 //uint16_t zigbee_set_tx_power_button;
 uint16_t zigbee_primary_channel_text;
-uint16_t zigbee_primary_channel_label;
 //uint16_t zigbee_get_primary_channel_button;
 //uint16_t zigbee_set_primary_channel_button;
 uint16_t zigbee_last_binding_result_label;
@@ -449,22 +448,9 @@ static constexpr char* zigbee_tx_power_text_str PROGMEM =
 	"Press Read to get current value or enter value between "
 	"-24 and 20 and press Update";
 
-static constexpr char* zigbee_primary_channel_info_str PROGMEM = 
+static constexpr char* zigbee_primary_channel_text_str PROGMEM = 
 	"Press Read to get current value or enter value between "
 	"11 and 26 and press Update";
-
-static constexpr char* zigbee_primary_channel_update_str PROGMEM =
-	"New Zigbee primary channel write success!<br>"
-	"Unfortunately, due to ZBOSS stack limitation, "
-	"new channel can be activated only after "
-	"<b><i>Zigbee factory reset</i></b>, "
-	"which itself will require re-pairing every device!<br><br>"
-	//"with active switch "
-	//"<b><i>Force device to bind gateway again</i></b>"
-	"TIP: Before re-pairing device turn on switch "
-	"<b><i>Force device to bind gateway again</i></b>"
-	" and don't remove that device from gateway via Cloud/GUI - "
-	"all channels settings and actions will remain unchanged.";
 
 static char general_purpose_gui_buffer[1024] = {};
 
@@ -558,7 +544,9 @@ void updateDeviceInfoLabel(uint8_t device_slot);
 void gatewayCallback(Control *sender, int type, void *param);
 void selectGuiModeCallback(Control *sender, int type);
 void enterWifiDetailsCallback(Control *sender, int type, void *param);
+void enterZabbixDetailsCallback(Control *sender, int type, void *param);
 void textCallback(Control *sender, int type);
+void Zabbix_textCallback(Control *sender, int type);
 void generalCallback(Control *sender, int type);
 void onZigbeeTabCallback(Control *sender, int type);
 void onChannelsTabCallback(Control *sender, int type);
@@ -957,15 +945,14 @@ void fillGatewayGeneralnformation(char *buf) {
 		esp_zb_get_extended_pan_id(extended_pan_id);
 		ieee_addr_to_str(extended_pan_id_str, extended_pan_id);
 		
-		snprintf_P(
-			buf, 1024, PSTR(
-				"<br><b><i>Supla Device SDK version:</i></b> <i>%s</i><br>"
-				"<b><i>Supla GUID:</i></b> <i>%s</i><br><br>"
-				"<b><i>Z2S Gateway version:</i></b> <i>%s</i><br><br>"
-				"<b><i>Network extended PAN ID:</i></b> <i>%s</i><br>"
-				"<b><i>Network current channel:</i></b> <i>%u</i><br><br>"), 
-			suplaDeviceVersion,Supla_GUID_str, Z2S_VERSION, extended_pan_id_str,
-			esp_zb_get_current_channel());
+		snprintf_P(buf, 1024, PSTR("<b><i>Supla firmware:</i></b> <i>%s</i><br><br>"
+															 "<b><i>Supla GUID:</i></b> <i>%s</i><br><br>"
+															 "<b><i>Z2S Gateway version:</i></b> <i>%s</i><br><br>"
+															 "<b><i>Network extended PAN ID:</i></b> <i>%s</i><br><br>"), 
+							 Supla::RegisterDevice::getSoftVer(), 
+							 Supla_GUID_str, 
+							 Z2S_VERSION,
+							 extended_pan_id_str);
 	
 		log_i("Device information %s", buf);
 
@@ -1254,6 +1241,37 @@ void buildCredentialsGUI() {
 	}			
 }
 
+//============================================================================
+// ZABBIX Config
+//============================================================================
+void buildCredentialsZabbix() {
+	auto cfg = Supla::Storage::ConfigInstance();
+	char *working_str_ptr = PSTR("Zabbix config");
+	auto wifitab = ESPUI.addControl(
+		Control::Type::Tab, PSTR(empty_str), working_str_ptr);
+		
+	//===========================================================
+	working_str = PSTR(empty_str);
+	Zabbix_server = ESPUI.addControl(
+		Control::Type::Text, PSTR("Zabbix server"), working_str, 
+		Control::Color::Emerald, wifitab, Zabbix_textCallback);
+	
+	//===========================================================
+	working_str_ptr = PSTR("Save");
+	save_button = ESPUI.addControl(
+		Control::Type::Button, PSTR("Save"), working_str_ptr, 
+		Control::Color::Emerald, wifitab, enterZabbixDetailsCallback,
+		(void*)GUI_CB_SAVE_FLAG);
+
+	//===========================================================
+
+	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+	if (cfg->getString(PSTR("zabbix_server"), general_purpose_gui_buffer, sizeof(general_purpose_gui_buffer)) && strlen(general_purpose_gui_buffer) > 0)
+		ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
+}
+//============================================================================
+//============================================================================
+
 void buildZigbeeTabGUI() {
 
 	char *working_str_ptr = PSTR("Zigbee settings");
@@ -1291,10 +1309,10 @@ void buildZigbeeTabGUI() {
 		Control::Type::Text, PSTR("Zigbee TX power"), working_str, 
 		Control::Color::Emerald, zigbeetab, generalCallback);
 
-	//working_str = zigbee_primary_channel_text_str;
+	working_str = zigbee_primary_channel_text_str;
 	zigbee_primary_channel_text = ESPUI.addControl(
-		Control::Type::Number, PSTR("Zigbee primary channel"), (long int)0, 
-		Control::Color::Emerald, zigbeetab, generalCallback);
+		Control::Type::Text, PSTR("Zigbee primary channel"), 
+		working_str, Control::Color::Emerald, zigbeetab, generalCallback);
 	
 	working_str_ptr = PSTR("Read");
 	auto zigbee_get_tx_power_button = ESPUI.addControl(
@@ -1317,11 +1335,6 @@ void buildZigbeeTabGUI() {
 		Control::Type::Button, PSTR(empty_str), working_str_ptr, 
 		Control::Color::Emerald, zigbee_primary_channel_text, 
 		generalZigbeeCallback, (void*)GUI_CB_SET_PC_FLAG);
-
-	working_str_ptr = zigbee_primary_channel_info_str;
-	zigbee_primary_channel_label = ESPUI.addControl(
-		Control::Type::Label, PSTR("Zigbee primary channel"), working_str_ptr, 
-		Control::Color::Emerald, zigbee_primary_channel_text);
 	
 	working_str = three_dots_str;
 	zigbee_last_binding_result_label = ESPUI.addControl(
@@ -3806,6 +3819,10 @@ void Z2S_buildWebGUI(gui_modes_t mode, uint32_t gui_custom_flags) {
 		buildCredentialsGUI();
 	}
 
+	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_CREDENTIALS) {
+		buildCredentialsZabbix();
+	}
+	
 	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_ZIGBEE) {
 		buildZigbeeTabGUI();
 	}
@@ -3850,6 +3867,12 @@ void Z2S_reloadWebGUI() {
 void Z2S_startWebGUIConfig() {
 
 	//char general_purpose_gui_buffer[1024] = {};
+	
+	auto cfg = Supla::Storage::ConfigInstance();
+	char buf[256] = {};
+	if (cfg && cfg->getString(PSTR("zabbix_server"), buf, sizeof(buf))) {
+		printf("Zapisany Zabbix server: %s\n", buf);
+	}
 	
 	fillGatewayGeneralnformation(general_purpose_gui_buffer);
 
@@ -3914,6 +3937,13 @@ void Z2S_startWebGUIConfig() {
 																										 Control::noParent, 
 																										 generalCallback);
 
+	Zabbix_server = ESPUI.addControl(Control::Type::Text, 
+															PSTR("Zabbix server"), 
+															working_str, 
+															Control::Color::Emerald, 
+															Control::noParent, 
+															Zabbix_textCallback);
+
 	auto gui_mode_selector = ESPUI.addControl(Control::Type::Select, 
 									 												  PSTR("Select GUI mode (requires restart)"), 
 																		 				(long int)(long int)0, 
@@ -3958,8 +3988,6 @@ void Z2S_startWebGUIConfig() {
 		Control::Type::Label, PSTR("Status"), "Missing data...", 
 		Control::Color::Emerald, save_button);
 
-	auto cfg = Supla::Storage::ConfigInstance();
-  
 	if (cfg) {
 
   	memset(
@@ -3979,6 +4007,10 @@ void Z2S_startWebGUIConfig() {
 		if (cfg->getEmail(general_purpose_gui_buffer) && 
 				strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Supla_email, general_purpose_gui_buffer);
+
+		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+		if (cfg->getString(PSTR("zabbix_server"), general_purpose_gui_buffer, sizeof(general_purpose_gui_buffer)) && strlen(general_purpose_gui_buffer) > 0)
+			ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
 
 		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level);
 	}
@@ -4231,6 +4263,21 @@ void enterWifiDetailsCallback(Control *sender, int type, void *param) {
 	}
 }
 
+//============================================================================
+void enterZabbixDetailsCallback(Control *sender, int type, void *param) {
+    if ((type == B_UP) && data_ready) {
+        auto cfg = Supla::Storage::ConfigInstance();
+        if (cfg) {
+            cfg->setString(
+                PSTR("zabbix_server"),
+                ESPUI.getControl(Zabbix_server)->getValueCstr()
+            );
+            cfg->commit();
+        }
+    }
+}
+
+//============================================================================
 void textCallback(Control *sender, int type) {
 		
 		if ((ESPUI.getControl(wifi_ssid_text)->getValue().length() > 0) &&
@@ -4245,6 +4292,19 @@ void textCallback(Control *sender, int type) {
 		}
 }
 
+//============================================================================
+void Zabbix_textCallback(Control *sender, int type) {
+		
+		if (ESPUI.getControl(Zabbix_server)->getValue().length() > 0) {
+			ESPUI.updateLabel(save_label, PSTR("Data complete. Press Save"));
+			data_ready = true;
+		} else {
+			ESPUI.updateLabel(save_label, PSTR("Data incomplete!"));
+			data_ready = false;
+		}
+}
+
+//============================================================================
 void generalCallback(Control *sender, int type) {
 	
 	/*Serial.print("CB: id(");
@@ -6007,21 +6067,16 @@ void generalZigbeeCallback(Control *sender, int type, void *param){
 
 			case GUI_CB_GET_PC_FLAG : { //read primary channel
 
-				uint32_t zb_primary_channel;
+				uint32_t zb_primary_channel = 
+					esp_zb_get_primary_network_channel_set();
 
-				if (Supla::Storage::ConfigInstance()->getUInt32(
-    			Z2S_ZIGBEE_PRIMARY_CHANNEL, &zb_primary_channel)) {
+    		for (uint8_t i = 11; i <= 26; i++) {
+      		if (zb_primary_channel & (1 << i)) {
 
-    			for (uint8_t i = 11; i <= 26; i++) {
-      			if (zb_primary_channel & (1 << i)) {
-
-							//working_str = i;
-							ESPUI.updateNumber(zigbee_primary_channel_text, i);
-						}
+						working_str = i;
+						ESPUI.updateText(zigbee_primary_channel_text, working_str);
 					}
-    		}
-				ESPUI.updateLabel(
-					zigbee_primary_channel_label, zigbee_primary_channel_info_str);		
+    		}		
 			} break;
 
 			case GUI_CB_SET_PC_FLAG : { //write primary channel
@@ -6039,21 +6094,15 @@ void generalZigbeeCallback(Control *sender, int type, void *param){
 							if (Supla::Storage::ConfigInstance()->setUInt32(
 										Z2S_ZIGBEE_PRIMARY_CHANNEL, (1 << zb_primary_channel))) {
 
-        				ESPUI.updateLabel(
-									zigbee_primary_channel_label, 
-									zigbee_primary_channel_update_str);
-
-								log_i(
-									"New Zigbee primary channel set to 0x%08X", 
-									(1 << zb_primary_channel));
-
+        				ESPUI.updateText(zigbee_primary_channel_text, 
+									"New Zigbee primary channel write success! Restarting...");
    				     	Supla::Storage::ConfigInstance()->commit();
-        				//SuplaDevice.scheduleSoftRestart(1000);
+        				SuplaDevice.scheduleSoftRestart(1000);
 							}
 						}
 				else
-					ESPUI.updateLabel(
-						zigbee_primary_channel_label, zigbee_primary_channel_info_str);
+					ESPUI.updateText(zigbee_primary_channel_text, 
+													 zigbee_primary_channel_text_str);
 			} break;
 
 			case GUI_CB_SET_INSTALLATION_CODE_FLAG: {
