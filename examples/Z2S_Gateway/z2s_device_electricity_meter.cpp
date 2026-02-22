@@ -1,5 +1,11 @@
 #include "z2s_device_electricity_meter.h"
 
+#include "z2s_zabbix.h"
+
+bool flag  = false;
+char xvalue[16];
+char key[6];
+
 /*****************************************************************************/
 
 void initZ2SDeviceElectricityMeter(
@@ -626,5 +632,21 @@ void msgZ2SDeviceElectricityMeter(
         Supla_ElectricityMeter->setEnergyDivisor(em_value); 
       break;
     }
+	//-----------------------------------------------------------------------------	
+	if (flag==true) {
+	  if (device_slot >=0) {
+		if (strncmp(z2s_channels_table[channel_number_slot].Supla_channel_name, "z_", 2) == 0) {
+		  char *name = z2s_channels_table[channel_number_slot].Supla_channel_name;
+		  char *pos = strchr(name, '_');
+		  if (pos != NULL) {
+		    char hostname[32];
+		    strcpy(hostname, pos + 1);
+		    zabbix_send(hostname, key, xvalue);
+		  }
+		}
+		flag  = false;
+	  }
+	}
+	//-----------------------------------------------------------------------------
   }
 }
