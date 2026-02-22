@@ -441,7 +441,12 @@ void msgZ2SDeviceElectricityMeter(
 
       case Z2S_EM_ACT_FWD_ENERGY_A_SEL: 
 //		printf("%s energy value %lld\n", z2s_zb_devices_table[device_slot].device_local_name, em_value);
-        Supla_ElectricityMeter->setFwdActEnergy2(0, em_value); 
+		printf("Local name %s\n", z2s_zb_devices_table[device_slot].device_local_name);
+		printf("Supla_channel_name %s\n", z2s_channels_table[channel_number_slot].Supla_channel_name);
+		printf("energy 0x%x, value %lld\n", emv_selector, em_value);
+        Supla_ElectricityMeter->setFwdActEnergy2(0, em_value);
+		sprintf(key, "ener");
+		flag=true;
       break;
 
       case Z2S_EM_ACT_RVR_ENERGY_A_SEL: 
@@ -526,7 +531,11 @@ void msgZ2SDeviceElectricityMeter(
 
       case Z2S_EM_AC_FREQUENCY: 
 //		printf("%s frequency value %lld\n", z2s_zb_devices_table[device_slot].device_local_name, em_value);
-        Supla_ElectricityMeter->setFreq2(em_value); 
+//		printf("frequency 0x%x, value %lld\n", emv_selector, em_value);
+        Supla_ElectricityMeter->setFreq2(em_value);
+		snprintf(xvalue, sizeof(xvalue), "%d", (int)em_value);
+		sprintf(key, "frq");
+		flag=true;
       break;
 
       case Z2S_EM_FWD_BALANCED_ENERGY_SEL:
