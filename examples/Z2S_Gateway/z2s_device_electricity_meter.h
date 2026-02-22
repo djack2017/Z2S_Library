@@ -73,4 +73,9 @@ void updateZ2SDeviceElectricityMeter(int16_t channel_number_slot);
 void msgZ2SDeviceElectricityMeter(
   int16_t channel_number_slot, uint8_t selector, int64_t value);
 
+/*---------------------------------------------------------------------------------------------------------------------------*/
+
+int8_t findDeviceSlotByShortAddr(uint16_t short_addr);
+
+
 #endif

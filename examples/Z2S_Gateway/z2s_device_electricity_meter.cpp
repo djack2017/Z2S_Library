@@ -370,7 +370,18 @@ void updateZ2SDeviceElectricityMeter(int16_t channel_number_slot) {
     log_i("EM channel extended data successfully UPDATED (counters zeroed)"); 
 }
 
-/*****************************************************************************/
+/*---------------------------------------------------------------------------------------------------------------------------*/
+
+int8_t findDeviceSlotByShortAddr(uint16_t short_addr) {
+    for (int i = 0; i < Z2S_ZB_DEVICES_MAX_NUMBER; i++) {
+        if (z2s_zb_devices_table[i].short_addr == short_addr) {
+            return i;
+        }
+    }
+    return -1; // nie znaleziono
+}
+
+/*---------------------------------------------------------------------------------------------------------------------------*/
 
 void msgZ2SDeviceElectricityMeter(
   int16_t channel_number_slot, uint8_t emv_selector, int64_t em_value) {
