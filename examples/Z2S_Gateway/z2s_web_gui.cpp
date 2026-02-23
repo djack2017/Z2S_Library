@@ -4009,8 +4009,6 @@ void Z2S_startWebGUIConfig() {
 		Control::Type::Label, PSTR("Status"), "Missing data...", 
 		Control::Color::Emerald, save_button);
 
-	auto cfg = Supla::Storage::ConfigInstance();
-  
 	if (cfg) {
 
   	memset(
