@@ -153,15 +153,31 @@ void msgZ2SDeviceTempHumidityTemp(
     return;
   }
 
-  //--------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------	
   int8_t device_slot = findDeviceSlotByShortAddr(z2s_channels_table[channel_number_slot].short_addr);
-  snprintf(xtemp, sizeof(xtemp), "%d", (int)(10*temp));
-  printf("Temp: %s\n", xtemp);
-  sprintf(key, "tem");
   if (device_slot >=0) {
-	printf("Zabbix (local name: %s)\n", z2s_zb_devices_table[device_slot].device_local_name);
-	zabbix_send(z2s_zb_devices_table[device_slot].device_local_name, key, xtemp);
+    snprintf(xtemp, sizeof(xtemp), "%d", (int)(10*temp));
+	printf("Temp: %s\n", xtemp);
+	sprintf(key, "tem");
+	if (strncmp(z2s_channels_table[channel_number_slot].Supla_channel_name, "z_", 2) == 0) {
+	  char *name = z2s_channels_table[channel_number_slot].Supla_channel_name;
+	  char *pos = strchr(name, '_');
+	  if (pos != NULL) {
+		char hostname[32];
+		strcpy(hostname, pos + 1);
+		zabbix_send(hostname, key, xtemp);
+	  }
+	}
   }
+  //-----------------------------------------------------------------------------
+//  int8_t device_slot = findDeviceSlotByShortAddr(z2s_channels_table[channel_number_slot].short_addr);
+//  snprintf(xtemp, sizeof(xtemp), "%d", (int)(10*temp));
+//  printf("Temp: %s\n", xtemp);
+//  sprintf(key, "tem");
+//  if (device_slot >=0) {
+//	printf("Zabbix (local name: %s)\n", z2s_zb_devices_table[device_slot].device_local_name);
+//	zabbix_send(z2s_zb_devices_table[device_slot].device_local_name, key, xtemp);
+//  }
   //--------------------------------------------------------------------------
 
   Z2S_updateZbDeviceLastSeenMs(
@@ -312,15 +328,32 @@ void msgZ2SDeviceTempHumidityHumi(int16_t channel_number_slot, double humi) {
       default: break;
     }
 	
-	//--------------------------------------------------------------------------
+	//-----------------------------------------------------------------------------	
 	int8_t device_slot = findDeviceSlotByShortAddr(z2s_channels_table[channel_number_slot].short_addr);
-	snprintf(xhumi, sizeof(xhumi), "%d", (int)(10*humi));
-    printf("Humi: %s\n", xhumi);
-    sprintf(key, "hum");
-    if (device_slot >=0) {
-		printf("Zabbix (local name: %s)\n", z2s_zb_devices_table[device_slot].device_local_name);
-		zabbix_send(z2s_zb_devices_table[device_slot].device_local_name, key, xhumi);
+	if (device_slot >=0) {
+		snprintf(xhumi, sizeof(xhumi), "%d", (int)(10*humi));
+		printf("Humi: %s\n", xhumi);
+		sprintf(key, "hum");
+		if (strncmp(z2s_channels_table[channel_number_slot].Supla_channel_name, "z_", 2) == 0) {
+		  char *name = z2s_channels_table[channel_number_slot].Supla_channel_name;
+		  char *pos = strchr(name, '_');
+		  if (pos != NULL) {
+		    char hostname[32];
+		    strcpy(hostname, pos + 1);
+		    zabbix_send(hostname, key, xhumi);
+		  }
+		}
 	}
+	//-----------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+//	int8_t device_slot = findDeviceSlotByShortAddr(z2s_channels_table[channel_number_slot].short_addr);
+//	snprintf(xhumi, sizeof(xhumi), "%d", (int)(10*humi));
+//    printf("Humi: %s\n", xhumi);
+//    sprintf(key, "hum");
+//    if (device_slot >=0) {
+//		printf("Zabbix (local name: %s)\n", z2s_zb_devices_table[device_slot].device_local_name);
+//		zabbix_send(z2s_zb_devices_table[device_slot].device_local_name, key, xhumi);
+//	}
 	//--------------------------------------------------------------------------
 	
     Supla_Z2S_VirtualThermHygroMeter->setHumi(humi);
