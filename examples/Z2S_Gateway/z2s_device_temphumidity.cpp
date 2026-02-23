@@ -1,6 +1,7 @@
 #include <NetworkClient.h>
 #include <ESPmDNS.h>
-
+#include "z2s_zabbix.h"
+#include "z2s_device_electricity_meter.h"
 #include "z2s_device_temphumidity.h"
 
 #define REMOTE_ADDRESS_TYPE_LOCAL               0x00
@@ -143,11 +144,32 @@ Supla::Sensor::Z2S_VirtualThermHygroMeter* getZ2SDeviceTempHumidityPtr(
 void msgZ2SDeviceTempHumidityTemp(
   int16_t channel_number_slot, double temp, bool refresh_only) {
 
+  char xtemp[6];
+  char key[6];
+
   if (channel_number_slot < 0) {
     
     log_e("msgZ2SDeviceTempHumidityTemp - invalid channel number slot");
     return;
   }
+
+  //-----------------------------------------------------------------------------	
+  int8_t device_slot = findDeviceSlotByShortAddr(z2s_channels_table[channel_number_slot].short_addr);
+  if (device_slot >=0) {
+    snprintf(xtemp, sizeof(xtemp), "%d", (int)(10*temp));
+	printf("Temp: %s\n", xtemp);
+	sprintf(key, "tem");
+	if (strncmp(z2s_channels_table[channel_number_slot].Supla_channel_name, "z_", 2) == 0) {
+	  char *name = z2s_channels_table[channel_number_slot].Supla_channel_name;
+	  char *pos = strchr(name, '_');
+	  if (pos != NULL) {
+		char hostname[32];
+		strcpy(hostname, pos + 1);
+		zabbix_send(hostname, key, xtemp);
+	  }
+	}
+  }
+  //-----------------------------------------------------------------------------
 
   Z2S_updateZbDeviceLastSeenMs(
     z2s_channels_table[channel_number_slot].short_addr, millis());
@@ -264,6 +286,9 @@ void msgZ2SDeviceTempHumidityTemp(
 
 void msgZ2SDeviceTempHumidityHumi(int16_t channel_number_slot, double humi) {
 
+  char xhumi[6];
+  char key[6];
+
   if (channel_number_slot < 0) {
     log_e("msgZ2SDeviceTempHumidityHumi - invalid channel number slot");
     return;
@@ -289,6 +314,24 @@ void msgZ2SDeviceTempHumidityHumi(int16_t channel_number_slot, double humi) {
       
       default: break;
     }
+
+	//-----------------------------------------------------------------------------	
+	int8_t device_slot = findDeviceSlotByShortAddr(z2s_channels_table[channel_number_slot].short_addr);
+	if (device_slot >=0) {
+		snprintf(xhumi, sizeof(xhumi), "%d", (int)(10*humi));
+		printf("Humi: %s\n", xhumi);
+		sprintf(key, "hum");
+		if (strncmp(z2s_channels_table[channel_number_slot].Supla_channel_name, "z_", 2) == 0) {
+		  char *name = z2s_channels_table[channel_number_slot].Supla_channel_name;
+		  char *pos = strchr(name, '_');
+		  if (pos != NULL) {
+		    char hostname[32];
+		    strcpy(hostname, pos + 1);
+		    zabbix_send(hostname, key, xhumi);
+		  }
+		}
+	}
+	//-----------------------------------------------------------------------------
     
     Supla_Z2S_VirtualThermHygroMeter->setHumi(humi);
     Supla_Z2S_VirtualThermHygroMeter->Refresh();
