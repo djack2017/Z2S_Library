@@ -65,6 +65,7 @@ uint16_t gui_start_delay_number;
 //uint16_t gui_start_delay_save_button;
 uint16_t gateway_mdns_name_text;
 uint16_t rebuild_Supla_channels_switcher;
+uint16_t Zabbix_server;
 uint16_t use_new_at_model_switcher;
 
 uint16_t wifi_ssid_text;
@@ -558,7 +559,9 @@ void updateDeviceInfoLabel(uint8_t device_slot);
 void gatewayCallback(Control *sender, int type, void *param);
 void selectGuiModeCallback(Control *sender, int type);
 void enterWifiDetailsCallback(Control *sender, int type, void *param);
+void enterZabbixDetailsCallback(Control *sender, int type, void *param);
 void textCallback(Control *sender, int type);
+void Zabbix_textCallback(Control *sender, int type);
 void generalCallback(Control *sender, int type);
 void onZigbeeTabCallback(Control *sender, int type);
 void onChannelsTabCallback(Control *sender, int type);
@@ -1253,6 +1256,37 @@ void buildCredentialsGUI() {
 		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level == 2 ? 1 : 0);
 	}			
 }
+
+//============================================================================
+// ZABBIX Config
+//============================================================================
+void buildCredentialsZabbix() {
+	auto cfg = Supla::Storage::ConfigInstance();
+	char *working_str_ptr = PSTR("Zabbix config");
+	auto wifitab = ESPUI.addControl(
+		Control::Type::Tab, PSTR(empty_str), working_str_ptr);
+		
+	//===========================================================
+	working_str = PSTR(empty_str);
+	Zabbix_server = ESPUI.addControl(
+		Control::Type::Text, PSTR("Zabbix server"), working_str, 
+		Control::Color::Emerald, wifitab, Zabbix_textCallback);
+	
+	//===========================================================
+	working_str_ptr = PSTR("Save");
+	save_button = ESPUI.addControl(
+		Control::Type::Button, PSTR("Save"), working_str_ptr, 
+		Control::Color::Emerald, wifitab, enterZabbixDetailsCallback,
+		(void*)GUI_CB_SAVE_FLAG);
+
+	//===========================================================
+
+	memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+	if (cfg->getString(PSTR("zabbix_server"), general_purpose_gui_buffer, sizeof(general_purpose_gui_buffer)) && strlen(general_purpose_gui_buffer) > 0)
+		ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
+}
+//============================================================================
+//============================================================================
 
 void buildZigbeeTabGUI() {
 
@@ -3806,6 +3840,10 @@ void Z2S_buildWebGUI(gui_modes_t mode, uint32_t gui_custom_flags) {
 		buildCredentialsGUI();
 	}
 
+	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_CREDENTIALS) {
+		buildCredentialsZabbix();
+	}
+	
 	if (gui_build_control_flags & GUI_BUILD_CONTROL_FLAG_ZIGBEE) {
 		buildZigbeeTabGUI();
 	}
@@ -3850,6 +3888,12 @@ void Z2S_reloadWebGUI() {
 void Z2S_startWebGUIConfig() {
 
 	//char general_purpose_gui_buffer[1024] = {};
+	
+	auto cfg = Supla::Storage::ConfigInstance();
+	char buf[256] = {};
+	if (cfg && cfg->getString(PSTR("zabbix_server"), buf, sizeof(buf))) {
+		printf("Zapisany Zabbix server: %s\n", buf);
+	}
 	
 	fillGatewayGeneralnformation(general_purpose_gui_buffer);
 
@@ -3913,6 +3957,13 @@ void Z2S_startWebGUIConfig() {
 																										 Control::Color::Emerald, 
 																										 Control::noParent, 
 																										 generalCallback);
+
+	Zabbix_server = ESPUI.addControl(Control::Type::Text, 
+															PSTR("Zabbix server"), 
+															working_str, 
+															Control::Color::Emerald, 
+															Control::noParent, 
+															Zabbix_textCallback);
 
 	auto gui_mode_selector = ESPUI.addControl(Control::Type::Select, 
 									 												  PSTR("Select GUI mode (requires restart)"), 
@@ -3979,6 +4030,10 @@ void Z2S_startWebGUIConfig() {
 		if (cfg->getEmail(general_purpose_gui_buffer) && 
 				strlen(general_purpose_gui_buffer) > 0)
 			ESPUI.updateText(Supla_email, general_purpose_gui_buffer);
+
+		memset(general_purpose_gui_buffer, 0, sizeof(general_purpose_gui_buffer));
+		if (cfg->getString(PSTR("zabbix_server"), general_purpose_gui_buffer, sizeof(general_purpose_gui_buffer)) && strlen(general_purpose_gui_buffer) > 0)
+			ESPUI.updateText(Zabbix_server, general_purpose_gui_buffer);
 
 		ESPUI.updateNumber(Supla_skip_certificate_switcher, _z2s_security_level);
 	}
@@ -4231,6 +4286,21 @@ void enterWifiDetailsCallback(Control *sender, int type, void *param) {
 	}
 }
 
+//============================================================================
+void enterZabbixDetailsCallback(Control *sender, int type, void *param) {
+    if ((type == B_UP) && data_ready) {
+        auto cfg = Supla::Storage::ConfigInstance();
+        if (cfg) {
+            cfg->setString(
+                PSTR("zabbix_server"),
+                ESPUI.getControl(Zabbix_server)->getValueCstr()
+            );
+            cfg->commit();
+        }
+    }
+}
+
+//============================================================================
 void textCallback(Control *sender, int type) {
 		
 		if ((ESPUI.getControl(wifi_ssid_text)->getValue().length() > 0) &&
@@ -4245,6 +4315,19 @@ void textCallback(Control *sender, int type) {
 		}
 }
 
+//============================================================================
+void Zabbix_textCallback(Control *sender, int type) {
+		
+		if (ESPUI.getControl(Zabbix_server)->getValue().length() > 0) {
+			ESPUI.updateLabel(save_label, PSTR("Data complete. Press Save"));
+			data_ready = true;
+		} else {
+			ESPUI.updateLabel(save_label, PSTR("Data incomplete!"));
+			data_ready = false;
+		}
+}
+
+//============================================================================
 void generalCallback(Control *sender, int type) {
 	
 	/*Serial.print("CB: id(");
