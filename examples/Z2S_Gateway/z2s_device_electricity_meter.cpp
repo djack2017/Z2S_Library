@@ -440,7 +440,7 @@ void msgZ2SDeviceElectricityMeter(
 
       case Z2S_EM_ACT_FWD_ENERGY_A_SEL: 
 //		printf("%s energy value %lld\n", z2s_zb_devices_table[device_slot].device_local_name, em_value);
-		printf("energy 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("energy 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setFwdActEnergy2(0, em_value);
 		snprintf(xvalue, sizeof(xvalue), "%d", (int)em_value);
 		sprintf(key, "ener");
@@ -448,167 +448,171 @@ void msgZ2SDeviceElectricityMeter(
       break;
 
       case Z2S_EM_ACT_RVR_ENERGY_A_SEL: 
-		printf("0 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("0 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setRvrActEnergy2(0, em_value); 
       break;
 
       case Z2S_EM_POWER_FACTOR_A_SEL: 
-		printf("1 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("1 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setPowerFactor(0, em_value * 1000); 
       break;
 
       case Z2S_EM_REACTIVE_POWER_A_SEL: 
-		printf("2 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("2 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setPowerReactive2(0, em_value); 
       break;
 
       case Z2S_EM_APPARENT_POWER_A_SEL: 
-		printf("3 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("3 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setPowerApparent2(0, em_value); 
       break;
 
       case Z2S_EM_VOLTAGE_B_SEL: 
-		printf("4 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("4 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setVoltage2(1, em_value); 
       break;
       
       case Z2S_EM_CURRENT_B_SEL: 
-		printf("5 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("5 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setCurrent2(1, abs(em_value)); 
       break;
       
       case Z2S_EM_ACTIVE_POWER_B_SEL: 
-		printf("6 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("6 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setPowerActive2(1, em_value); 
       break;
      
       case Z2S_EM_ACT_FWD_ENERGY_B_SEL: 
-		printf("7 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("7 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setFwdActEnergy2(1, em_value); 
       break;
       
       case Z2S_EM_ACT_RVR_ENERGY_B_SEL: 
-		printf("8 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("8 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setRvrActEnergy2(1, em_value); 
       break;
       
       case Z2S_EM_POWER_FACTOR_B_SEL: 
-		printf("9 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("9 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setPowerFactor(1, em_value * 1000); 
       break;
 
       case Z2S_EM_REACTIVE_POWER_B_SEL: 
-		printf("10 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("10 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setPowerReactive2(1, em_value); 
       break;
 
       case Z2S_EM_APPARENT_POWER_B_SEL: 
-		printf("11 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("11 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setPowerApparent2(1, em_value); 
       break;
 
       case Z2S_EM_VOLTAGE_C_SEL: 
-		printf("12 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("12 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setVoltage2(2, em_value); 
       break;
 
       case Z2S_EM_CURRENT_C_SEL: 
-		printf("13 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("13 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setCurrent2(2, abs(em_value)); 
       break;
 
       case Z2S_EM_ACTIVE_POWER_C_SEL: 
-		printf("14 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("14 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setPowerActive2(2, em_value); 
       break;
 
       case Z2S_EM_ACT_FWD_ENERGY_C_SEL: 
-		printf("15 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("15 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setFwdActEnergy2(2, em_value); 
       break;
 
       case Z2S_EM_ACT_RVR_ENERGY_C_SEL: 
-		printf("16 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("16 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setRvrActEnergy2(2, em_value); 
       break;
 
       case Z2S_EM_POWER_FACTOR_C_SEL: 
-		printf("17 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("17 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setPowerFactor(2, em_value * 1000); 
       break;
       
       case Z2S_EM_REACTIVE_POWER_C_SEL: 
-		printf("18 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("18 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setPowerReactive2(2, em_value); 
       break;
 
       case Z2S_EM_APPARENT_POWER_C_SEL: 
-		printf("19 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("19 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setPowerApparent2(2, em_value); 
       break;
 
       case Z2S_EM_AC_FREQUENCY: 
-		printf("20 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("20 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setFreq2(em_value); 
       break;
 
       case Z2S_EM_FWD_BALANCED_ENERGY_SEL:
-		printf("21 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("%s energy value %lld\n", z2s_zb_devices_table[device_slot].device_local_name, em_value);
+		printf("energy 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setFwdBalancedEnergy2(em_value); 
+		snprintf(xvalue, sizeof(xvalue), "%d", (int)em_value);
+		sprintf(key, "ener");
+		flag=true;
       break;
 
       case Z2S_EM_RVR_BALANCED_ENERGY_SEL:
-		printf("22 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("22 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setRvrBalancedEnergy2(em_value); 
       break;
 
       case Z2S_EM_AC_VOLTAGE_MUL_SEL: 
-		printf("23 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("23 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setVoltageMultiplier(em_value);   
       break;
       
       case Z2S_EM_AC_VOLTAGE_DIV_SEL: 
-		printf("24 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("24 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setVoltageDivisor(em_value); 
       break;
       
       case Z2S_EM_AC_CURRENT_MUL_SEL: 
-		printf("25 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("25 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setCurrentMultiplier(em_value); 
       break;
       
       case Z2S_EM_AC_CURRENT_DIV_SEL: 
-		printf("26 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("26 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setCurrentDivisor(em_value);
   	  break;
       
       case Z2S_EM_AC_ACTIVE_POWER_MUL_SEL:  
-		printf("27 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("27 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setActivePowerMultiplier(em_value); 
       break;
       
       case Z2S_EM_AC_ACTIVE_POWER_DIV_SEL:  
-		printf("28 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("28 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setActivePowerDivisor(em_value); 
       break;
       
       case Z2S_EM_AC_FREQUENCY_MUL_SEL: 
-		printf("29 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("29 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setFreqMultiplier(em_value); 
       break;
       
       case Z2S_EM_AC_FREQUENCY_DIV_SEL: 
-		printf("30 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("30 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setFreqDivisor(em_value); 
       break;
       
       case Z2S_EM_ACT_FWD_ENERGY_MUL_SEL: 
-		printf("31 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("31 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setEnergyMultiplier(em_value); 
       break;
    
       case Z2S_EM_ACT_FWD_ENERGY_DIV_SEL: 
-		printf("32 0x%x, value %lld\n", emv_selector, em_value);
+//		printf("32 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setEnergyDivisor(em_value); 
       break;
     }
