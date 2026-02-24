@@ -412,8 +412,6 @@ void msgZ2SDeviceElectricityMeter(
     switch (emv_selector) {
 
       case Z2S_EM_VOLTAGE_A_SEL: 
-//		printf("%s voltage value %lld\n", z2s_zb_devices_table[device_slot].device_local_name, em_value);
-//		printf("voltage 0x%x, value %lld\n", emv_selector, em_value);
 		Supla_ElectricityMeter->setVoltage2(0, em_value);
 		snprintf(xvalue, sizeof(xvalue), "%d", (int)em_value);
 		sprintf(key, "volt");
@@ -421,8 +419,6 @@ void msgZ2SDeviceElectricityMeter(
       break;
 
       case Z2S_EM_CURRENT_A_SEL: 
-//		printf("%s current value %lld\n", z2s_zb_devices_table[device_slot].device_local_name, em_value);
-//		printf("current 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setCurrent2(0, abs(em_value));
 		snprintf(xvalue, sizeof(xvalue), "%d", (int)em_value);
 		sprintf(key, "curr");
@@ -430,8 +426,6 @@ void msgZ2SDeviceElectricityMeter(
       break;
 
       case Z2S_EM_ACTIVE_POWER_A_SEL: 
-//		printf("%s power value %lld\n", z2s_zb_devices_table[device_slot].device_local_name, em_value);
-//		printf("power 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setPowerActive2(0, em_value);
 		snprintf(xvalue, sizeof(xvalue), "%d", (int)em_value);
 		sprintf(key, "pow");
@@ -439,12 +433,8 @@ void msgZ2SDeviceElectricityMeter(
       break;
 
       case Z2S_EM_ACT_FWD_ENERGY_A_SEL: 
-//		printf("%s energy value %lld\n", z2s_zb_devices_table[device_slot].device_local_name, em_value);
 //		printf("energy 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setFwdActEnergy2(0, em_value);
-		snprintf(xvalue, sizeof(xvalue), "%d", (int)em_value);
-		sprintf(key, "ener");
-		flag=true;
       break;
 
       case Z2S_EM_ACT_RVR_ENERGY_A_SEL: 
@@ -548,13 +538,13 @@ void msgZ2SDeviceElectricityMeter(
       break;
 
       case Z2S_EM_AC_FREQUENCY: 
-//		printf("20 0x%x, value %lld\n", emv_selector, em_value);
-        Supla_ElectricityMeter->setFreq2(em_value); 
+        Supla_ElectricityMeter->setFreq2(em_value);
+		snprintf(xvalue, sizeof(xvalue), "%d", (int)em_value);
+		sprintf(key, "frq");
+		flag=true;
       break;
 
       case Z2S_EM_FWD_BALANCED_ENERGY_SEL:
-//		printf("%s energy value %lld\n", z2s_zb_devices_table[device_slot].device_local_name, em_value);
-		printf("energy 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setFwdBalancedEnergy2(em_value); 
 		snprintf(xvalue, sizeof(xvalue), "%d", (int)em_value);
 		sprintf(key, "ener");
