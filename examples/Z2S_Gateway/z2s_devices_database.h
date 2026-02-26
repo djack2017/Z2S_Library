@@ -126,6 +126,9 @@
 #define Z2S_DEVICE_DESC_LUMI_AIR_QUALITY_SENSOR             0x2260
 #define Z2S_DEVICE_DESC_IKEA_AIR_QUALITY_SENSOR             0x2270
 
+#define Z2S_DEVICE_DESC_ZIBI_CUSTOM_CO_IAS_SENSOR           0x2280
+#define Z2S_DEVICE_DESC_ZIBI_CUSTOM_CO_SENSOR               0x2281
+
 #define Z2S_DEVICE_DESC_TUYA_PRESENCE_SENSOR                0x2300
 #define Z2S_DEVICE_DESC_TUYA_PRESENCE_SENSOR_1              0x2301
 #define Z2S_DEVICE_DESC_TUYA_PRESENCE_SENSOR_5              0x2305
@@ -208,7 +211,6 @@
 #define Z2S_DEVICE_DESC_DEVELCO_RELAY_ELECTRICITY_METER     0x4300
 #define Z2S_DEVICE_DESC_SHELLY_RELAY_ELECTRICITY_METER      0x4350
 #define Z2S_DEVICE_DESC_BOSCH_RELAY_ELECTRICITY_METER       0x4400
-
 #define Z2S_DEVICE_DESC_LUMI_SMART_WALL_OUTLET              0x4450
 
 #define Z2S_DEVICE_DESC_TUYA_RELAY_ELECTRICITY_METER        0x4500
@@ -1866,6 +1868,11 @@ static const z2s_device_desc_t Z2S_DEVICES_DESC[] PROGMEM [[maybe_unused]] = {
 
   {	.z2s_device_desc_id = Z2S_DEVICE_DESC_TUYA_WINDOW_COVERING_SINGLE,
     .z2s_device_clusters_count = 1,
+    .z2s_device_config_flags = 0,
+    .z2s_device_clusters = { ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING }},
+
+  {	.z2s_device_desc_id = Z2S_DEVICE_DESC_TUYA_WINDOW_COVERING_SINGLE,
+    .z2s_device_clusters_count = 1,
     .z2s_device_config_flags = Z2S_DEVICE_DESC_CONFIG_FLAG_TUYA_INIT,
     .z2s_device_clusters = { ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING }},
 
@@ -2165,7 +2172,12 @@ static const z2s_device_desc_t Z2S_DEVICES_DESC[] PROGMEM [[maybe_unused]] = {
     .z2s_device_config_flags = Z2S_DEVICE_DESC_CONFIG_FLAG_TUYA_INIT |
                                Z2S_DEVICE_DESC_CONFIG_FLAG_TUYA_USE_SEND_DATA,
     .z2s_device_clusters = { ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG,
-                             ESP_ZB_ZCL_CLUSTER_ID_ON_OFF }}
+                             ESP_ZB_ZCL_CLUSTER_ID_ON_OFF }},
+
+  {	.z2s_device_desc_id = Z2S_DEVICE_DESC_ZIBI_CUSTOM_CO_SENSOR,
+    .z2s_device_clusters_count = 1,
+    .z2s_device_config_flags = 0,
+    .z2s_device_clusters = { ZIBI_CUSTOM_CLUSTER_ID_CARBON_MONOXIDE_MESUREMENT }},
 };
 
 static const z2s_device_entity_t Z2S_DEVICES_LIST[] PROGMEM = {
@@ -2259,6 +2271,13 @@ static const z2s_device_entity_t Z2S_DEVICES_LIST[] PROGMEM = {
     .z2s_device_flags = Z2S_DEVICE_CONFIG_FLAG_MIRROR_ALL_ENDPOINTS,
 	  .z2s_device_endpoints_count = 10,
     .z2s_device_endpoints = {{10, 0, 0, Z2S_DEVICE_DESC_TEMPERATURE_SENSOR}}},
+
+    {	.manufacturer_name = "ZIBI", .model_name = "ESP32C6_CO_Sensor",
+    .z2s_device_uid = 40,
+	  .z2s_device_desc_id = Z2S_DEVICE_DESC_ZIBI_CUSTOM_CO_IAS_SENSOR,
+	  .z2s_device_endpoints_count = 2,
+    .z2s_device_endpoints = { { 10, 0, 0, Z2S_DEVICE_DESC_ZIBI_CUSTOM_CO_SENSOR},
+                              { 11, 0, 0, Z2S_DEVICE_DESC_IAS_ZONE_SENSOR }}},
 
   {	.manufacturer_name = "_TZ3000_akqdg6g7", .model_name = "TS0201",
     .z2s_device_uid = 100,
@@ -4170,6 +4189,11 @@ static const z2s_device_entity_t Z2S_DEVICES_LIST[] PROGMEM = {
 	  .z2s_device_desc_id = Z2S_DEVICE_DESC_TUYA_DIMMER_CT_BULB,
 	  .z2s_device_endpoints_count = 1},
 
+  {	.manufacturer_name = "_TZ3210_pgq2qvyv", .model_name = "TS0502B",
+    .z2s_device_uid = 18760,
+	  .z2s_device_desc_id = Z2S_DEVICE_DESC_TUYA_DIMMER_CT_BULB,
+	  .z2s_device_endpoints_count = 1},
+
   {	.manufacturer_name = "IKEA of Sweden", .model_name = "TRADFRI bulb E27 CWS globe 806lm",
     .z2s_device_uid = 18800,
 	  .z2s_device_desc_id = Z2S_DEVICE_DESC_IKEA_RGBW_BULB,
@@ -4407,6 +4431,11 @@ static const z2s_device_entity_t Z2S_DEVICES_LIST[] PROGMEM = {
 
   {	.manufacturer_name = "eWeLink", .model_name = "CK-BL702-AL-01(7009_Z102LG03-1)",
     .z2s_device_uid = 20400,
+	  .z2s_device_desc_id = Z2S_DEVICE_DESC_RGBW_BULB_XY,
+	  .z2s_device_endpoints_count = 1},
+
+  {	.manufacturer_name = "GLEDOPTO", .model_name = "GL-C-008P",
+    .z2s_device_uid = 20405,
 	  .z2s_device_desc_id = Z2S_DEVICE_DESC_RGBW_BULB_XY,
 	  .z2s_device_endpoints_count = 1},
 
@@ -5156,6 +5185,12 @@ static const z2s_device_entity_t Z2S_DEVICES_LIST[] PROGMEM = {
     .z2s_device_desc_id = Z2S_DEVICE_DESC_TS0601_ZWT_ZWT100,
     .z2s_device_endpoints_count = 1},
 
+  { .manufacturer_name = "_TZE204_xnbkhhdr", .model_name = "TS0601",
+    .z2s_device_uid = 29145,
+    .z2s_device_desc_id = Z2S_DEVICE_DESC_TS0601_ZWT_ZWT100,
+    .z2s_device_endpoints_count = 1},
+
+
   { .manufacturer_name = "_TZE284_ye5jkfsb", .model_name = "TS0601",
     .z2s_device_uid = 29200,
     .z2s_device_desc_id = Z2S_DEVICE_DESC_TS0601_MOES_BHT002,
@@ -5512,6 +5547,11 @@ static const z2s_device_entity_t Z2S_DEVICES_LIST[] PROGMEM = {
   { .manufacturer_name = "Zemismart", .model_name = "SPM02-3Z3",
     .z2s_device_uid = 34200,
     .z2s_device_desc_id = Z2S_DEVICE_DESC_3PHASES_ELECTRICITY_METER,
+    .z2s_device_endpoints_count = 1},
+
+  { .manufacturer_name = "SONOFF", .model_name = "MINI-ZBRBS",
+    .z2s_device_uid = 34300,
+    .z2s_device_desc_id = Z2S_DEVICE_DESC_WINDOW_COVERING_SINGLE,
     .z2s_device_endpoints_count = 1}
 //DEVICES_END
 };

@@ -35,6 +35,9 @@
 
 #define MAX_ZB_DEVICE_SUPLA_CHANNELS                            0x10 //16
 
+#define ACTION_NAME_MAX_SIZE                                    33
+#define ACTION_DESCRIPTION_MAX_SIZE                             128
+
 #define ALL_SUPLA_CHANNEL_TYPES   -1
 
 #define ADD_Z2S_DEVICE_STATUS_OK                                0x00  //device added 100%
@@ -207,8 +210,8 @@ typedef struct z2s_channel_action_s {
   uint8_t dst_Supla_channel;
   Supla::Event src_Supla_event;
   Supla::Action dst_Supla_action;
-  char action_name[33];
-  char action_description[128];
+  char action_name[ACTION_NAME_MAX_SIZE];
+  char action_description[ACTION_DESCRIPTION_MAX_SIZE];
   bool is_condition;
   double min_value;
   double max_value;
@@ -471,9 +474,9 @@ void Z2S_onPressureReceive(
   uint16_t short_addr, uint16_t endpoint, uint16_t cluster, 
   float pressure);
 
-void Z2S_onPM25Receive(
+void Z2S_onConcentrationReceive(
   uint16_t short_addr, uint16_t endpoint, uint16_t cluster, 
-  float pm25);
+  float measured_value);
 
 void Z2S_onIlluminanceReceive(
   uint16_t short_addr, uint16_t endpoint, uint16_t cluster, 
@@ -492,6 +495,10 @@ void Z2S_onOnOffReceive(
   bool state);
 
 void Z2S_onElectricalMeasurementReceive(
+  uint16_t short_addr, uint16_t endpoint, uint16_t cluster,
+  const esp_zb_zcl_attribute_t *attribute);
+
+void Z2S_onBinaryInputReceive(
   uint16_t short_addr, uint16_t endpoint, uint16_t cluster,
   const esp_zb_zcl_attribute_t *attribute);
 

@@ -1167,23 +1167,25 @@ void ZigbeeGateway::zbAttributeReporting(
     } else 
         log_i("humidity cluster (0x%x), attribute id (0x%x), attribute data type (0x%x)", 
               cluster_id, attribute->id, attribute->data.type);
-    } else if (cluster_id == ESP_ZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT) {
+  } else 
+    if ((cluster_id == ESP_ZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT) ||
+        (cluster_id == ESP_ZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT) ||
+        (cluster_id == ZIBI_CUSTOM_CLUSTER_ID_CARBON_MONOXIDE_MESUREMENT)) {
+      if ((attribute->id == 
+          ESP_ZB_ZCL_ATTR_PM2_5_MEASUREMENT_MEASURED_VALUE_ID) &&
+          (attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_SINGLE)) {
 
-    if ((attribute->id == 
-         ESP_ZB_ZCL_ATTR_PM2_5_MEASUREMENT_MEASURED_VALUE_ID) &&
-        (attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_SINGLE)) {
+        float value = attribute->data.value ? 
+          *(float *)attribute->data.value : 0;
 
-      float value = attribute->data.value ? 
-        *(float *)attribute->data.value : 0;
-
-      log_i("PM 2.5 measurement %f", value);
+        log_i("Concentration cluster measured value %f", value);
       
-      if (_on_pm25_receive)
-        _on_pm25_receive(
-          src_address.u.short_addr, src_endpoint, cluster_id, value);
+        if (_on_concentration_receive)
+          _on_concentration_receive(
+            src_address.u.short_addr, src_endpoint, cluster_id, value);
     } else 
         log_i(
-          "PM 2.5 cluster (0x%x), attribute id (0x%x), attribute data type (0x%x)", 
+          "Concentration cluster (0x%x), attribute id (0x%x), attribute data type (0x%x)", 
           cluster_id, attribute->id, attribute->data.type);
   } else 
   if (cluster_id == ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT) {
@@ -1260,15 +1262,23 @@ void ZigbeeGateway::zbAttributeReporting(
     if ((cluster_id == ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT) ||
         (cluster_id == ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT)) { 
 
-      log_i("multistate input cluster (0x%x), attribute id (0x%x), attribute data type (0x%x)", 
+      log_i("multistate input/output cluster (0x%x), attribute id (0x%x), attribute data type (0x%x)", 
             cluster_id, attribute->id, attribute->data.type);
       if (_on_multistate_input_receive)
         _on_multistate_input_receive(src_address.u.short_addr, src_endpoint, cluster_id, attribute);
     } else
+    if ((cluster_id == ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT) ||
+        (cluster_id == ESP_ZB_ZCL_CLUSTER_ID_BINARY_OUTPUT)) { 
+
+      log_i("binary input/output cluster (0x%x), attribute id (0x%x), attribute data type (0x%x)", 
+            cluster_id, attribute->id, attribute->data.type);
+      if (_on_binary_input_receive)
+        _on_binary_input_receive(src_address.u.short_addr, src_endpoint, cluster_id, attribute);
+    } else
     if ((cluster_id == ESP_ZB_ZCL_CLUSTER_ID_ANALOG_INPUT) ||
         (cluster_id == ESP_ZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT)) { 
 
-      log_i("analog input cluster (0x%x), attribute id (0x%x), attribute data type (0x%x)", 
+      log_i("analog input/output cluster (0x%x), attribute id (0x%x), attribute data type (0x%x)", 
             cluster_id, attribute->id, attribute->data.type);
       if (attribute->id == 0x55)
         log_i("value = %f", *(float *)attribute->data.value);

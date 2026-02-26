@@ -329,12 +329,13 @@ void enableZ2SNotifications() {
   zbGateway.onTemperatureReceive(Z2S_onTemperatureReceive);
   zbGateway.onHumidityReceive(Z2S_onHumidityReceive);
   zbGateway.onPressureReceive(Z2S_onPressureReceive);
-  zbGateway.onPM25Receive(Z2S_onPM25Receive);
+  zbGateway.onConcentrationReceive(Z2S_onConcentrationReceive);
   zbGateway.onIlluminanceReceive(Z2S_onIlluminanceReceive);
   zbGateway.onFlowReceive(Z2S_onFlowReceive);
   zbGateway.onOccupancyReceive(Z2S_onOccupancyReceive);
   zbGateway.onOnOffReceive(Z2S_onOnOffReceive);
   zbGateway.onElectricalMeasurementReceive(Z2S_onElectricalMeasurementReceive);
+  zbGateway.onBinaryInputReceive(Z2S_onBinaryInputReceive);
   zbGateway.onMultistateInputReceive(Z2S_onMultistateInputReceive);
   zbGateway.onAnalogInputReceive(Z2S_onAnalogInputReceive);
   zbGateway.onMeteringReceive(Z2S_onMeteringReceive);
@@ -371,12 +372,13 @@ void disableZ2SNotifications() {
   zbGateway.onTemperatureReceive(nullptr);
   zbGateway.onHumidityReceive(nullptr);
   zbGateway.onPressureReceive(nullptr);
-  zbGateway.onPM25Receive(nullptr);
+  zbGateway.onConcentrationReceive(nullptr);
   zbGateway.onIlluminanceReceive(nullptr);
   zbGateway.onFlowReceive(nullptr);
   zbGateway.onOccupancyReceive(nullptr);
   zbGateway.onOnOffReceive(nullptr);
   zbGateway.onElectricalMeasurementReceive(nullptr);
+  zbGateway.onBinaryInputReceive(nullptr);
   zbGateway.onMultistateInputReceive(nullptr);
   zbGateway.onAnalogInputReceive(nullptr);
   zbGateway.onMeteringReceive(nullptr);
@@ -1355,6 +1357,47 @@ if (Z2S_isGUIStarted())
 
                     switch (z2s_device_desc_id) {
 
+
+                      case Z2S_DEVICE_DESC_ADEO_SMART_PIRTH_SENSOR:
+                      case Z2S_DEVICE_DESC_ADEO_CONTACT_VIBRATION_SENSOR: 
+                      case Z2S_DEVICE_DESC_IAS_ZONE_SENSOR:
+                      case Z2S_DEVICE_DESC_TUYA_IAS_ZONE_SENSOR: 
+                      case Z2S_DEVICE_DESC_TUYA_IAS_ZONE_1_B_SENSOR:
+                      case Z2S_DEVICE_DESC_IAS_ZONE_SENSOR_1_2_T:
+                      case Z2S_DEVICE_DESC_IAS_ZONE_SENSOR_1_T_B:
+                      case Z2S_DEVICE_DESC_IAS_ZONE_SENSOR_1_B:
+                      case Z2S_DEVICE_DESC_IKEA_IAS_ZONE_SENSOR:
+                      case Z2S_DEVICE_DESC_IKEA_IAS_ZONE_SENSOR_1:
+                      case Z2S_DEVICE_DESC_IKEA_IAS_ZONE_SENSOR_2:
+                      case Z2S_DEVICE_DESC_TUYA_SIREN_ALARM:
+                      case Z2S_DEVICE_DESC_DEVELCO_IAS_ZONE_TEMP_SENSOR: {
+
+                        log_i("IAS ZONE sensor - clearing CIE ADDRESS");
+                        
+                        esp_zb_ieee_addr_t gateway_ieee_addr;
+
+                        memset(
+                          gateway_ieee_addr, 0, sizeof(esp_zb_ieee_addr_t));
+
+                        zbGateway.sendAttributeWrite(
+                          joined_device, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE,  
+                          ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID,
+                          ESP_ZB_ZCL_ATTR_TYPE_IEEE_ADDR, 
+                          sizeof(esp_zb_ieee_addr_t), &gateway_ieee_addr);
+
+                        log_i("IAS ZONE sensor - writing gateway CIE ADDRESS");
+
+                        esp_zb_get_long_address(gateway_ieee_addr);
+
+                        zbGateway.sendAttributeWrite(
+                          joined_device, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, 
+                          ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID,
+                          ESP_ZB_ZCL_ATTR_TYPE_IEEE_ADDR, 
+                          sizeof(esp_zb_ieee_addr_t), &gateway_ieee_addr);
+
+                      } break;
+
+
                       case Z2S_DEVICE_DESC_PHILIPS_HUE_DIMMER_SWITCH_2: {
 
                         write_mask_16 = 0x000B;
@@ -1490,40 +1533,6 @@ if (Z2S_isGUIStarted())
 
                 case 0x0000: break;     
 
-                case Z2S_DEVICE_DESC_ADEO_SMART_PIRTH_SENSOR:
-                case Z2S_DEVICE_DESC_ADEO_CONTACT_VIBRATION_SENSOR: 
-                case Z2S_DEVICE_DESC_IAS_ZONE_SENSOR:
-                case Z2S_DEVICE_DESC_TUYA_IAS_ZONE_SENSOR: 
-                case Z2S_DEVICE_DESC_TUYA_IAS_ZONE_1_B_SENSOR:
-                case Z2S_DEVICE_DESC_IAS_ZONE_SENSOR_1_2_T:
-                case Z2S_DEVICE_DESC_IAS_ZONE_SENSOR_1_T_B:
-                case Z2S_DEVICE_DESC_IAS_ZONE_SENSOR_1_B:
-                case Z2S_DEVICE_DESC_IKEA_IAS_ZONE_SENSOR:
-                case Z2S_DEVICE_DESC_IKEA_IAS_ZONE_SENSOR_1:
-                case Z2S_DEVICE_DESC_IKEA_IAS_ZONE_SENSOR_2:
-                case Z2S_DEVICE_DESC_TUYA_SIREN_ALARM:
-                case Z2S_DEVICE_DESC_DEVELCO_IAS_ZONE_TEMP_SENSOR:
-{
-                  esp_zb_ieee_addr_t gateway_ieee_addr;
-
-                  memset(gateway_ieee_addr, 0, sizeof(esp_zb_ieee_addr_t));
-
-                  zbGateway.sendAttributeWrite(
-                    joined_device, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE,  
-                    ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID,
-                    ESP_ZB_ZCL_ATTR_TYPE_IEEE_ADDR, sizeof(esp_zb_ieee_addr_t), 
-                    &gateway_ieee_addr);
-
-                  esp_zb_get_long_address(gateway_ieee_addr);
-
-                  zbGateway.sendAttributeWrite(
-                    joined_device, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, 
-                    ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID,
-                    ESP_ZB_ZCL_ATTR_TYPE_IEEE_ADDR, sizeof(esp_zb_ieee_addr_t), 
-                    &gateway_ieee_addr);
-
-                } break;
-                
 
                 case Z2S_DEVICE_DESC_TEMPHUMIDITY_SENSOR:
                 case Z2S_DEVICE_DESC_TEMPHUMIDITY_SENSOR_1:

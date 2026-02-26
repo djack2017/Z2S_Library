@@ -47,6 +47,7 @@
 #define IKEA_CUSTOM_CLUSTER_VOC_MEASUREMENT_ID                0x0000 //SINGLE
 
 #define SONOFF_CUSTOM_CLUSTER                                 0xFC11
+#define SONOFF_MANUFACTURER_CODE                              0x1286
 /*TRVZB attributes*/
 #define SONOFF_CUSTOM_CLUSTER_CHILD_LOCK_ID                   0x0000 //BOOL
 #define SONOFF_CUSTOM_CLUSTER_OPEN_WINDOW_ID                  0x6000 //BOOL
@@ -84,6 +85,11 @@
 #define SONOFF_CUSTOM_CLUSTER_TEMPERATURE_UNITS_ID            0x0007 //U16 //0 Celcius 1 Fahrenheit
 #define SONOFF_CUSTOM_CLUSTER_TEMPERATURE_CALIBRATION_ID      0x2003 //S16 -50 +50 0.1 Celcius
 #define SONOFF_CUSTOM_CLUSTER_HUMIDITY_CALIBRATION_ID         0x2004 //S16 -50 +50 0.1 %
+/*MINI-ZBRBS*/
+#define SONOFF_CUSTOM_CLUSTER_EXTERNAL_TRIGGER_MODE_ID        0x0016 //U8
+#define SONOFF_CUSTOM_CLUSTER_MOTOR_CALIBRATION_ACTION_ID     0x5001 //U8
+#define SONOFF_CUSTOM_CLUSTER_MOTOR_CALIBRATION_STATUS_ID     0x5012 //U8
+#define SONOFF_CUSTOM_CLUSTER_MOTOR_RUN_STATUS_ID             0x5013 //U8
 
 #define SONOFF_CUSTOM_CLUSTER_2                               0xFC12
 
@@ -189,6 +195,8 @@
 #define DANFOSS_EXTERNAL_TEMPERATURE_INPUT_ID                 0x4015 //S16
 #define DANFOSS_RADIATOR_COVERED_ID                           0x4016 //BOOL
 
+#define ZIBI_CUSTOM_CLUSTER_ID_CARBON_MONOXIDE_MESUREMENT     0x840C 
+
 #define CUSTOM_CMD_SYNC                                       true
 #define CUSTOM_CMD_ASYNC                                      false
 
@@ -199,6 +207,7 @@
 
 #define ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID 0x0021
 #define ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID              0x0020
+
 
 typedef struct findcb_userdata_s {
   uint8_t   _endpoint;
@@ -464,8 +473,8 @@ public:
   void onPressureReceive(void (*callback)(uint16_t short_addr, uint16_t, uint16_t, float)) {
     _on_pressure_receive = callback;
   }
-  void onPM25Receive(void (*callback)(uint16_t short_addr, uint16_t, uint16_t, float)) {
-    _on_pm25_receive = callback; 
+  void onConcentrationReceive(void (*callback)(uint16_t short_addr, uint16_t, uint16_t, float)) {
+    _on_concentration_receive = callback; 
   }
   void onIlluminanceReceive(void (*callback)(uint16_t short_addr, uint16_t, uint16_t, uint16_t)) {
     _on_illuminance_receive = callback;
@@ -482,6 +491,10 @@ public:
   void onElectricalMeasurementReceive(void (*callback)(uint16_t short_addr, uint16_t, uint16_t, 
                                       const esp_zb_zcl_attribute_t *)) {
     _on_electrical_measurement_receive = callback;
+  }
+  void onBinaryInputReceive(void (*callback)(uint16_t short_addr, uint16_t, uint16_t, 
+                                      const esp_zb_zcl_attribute_t *)) {
+    _on_binary_input_receive = callback;
   }
   void onMultistateInputReceive(void (*callback)(uint16_t short_addr, uint16_t, uint16_t, 
                                       const esp_zb_zcl_attribute_t *)) {
@@ -635,12 +648,13 @@ private:
   void (*_on_temperature_receive)(uint16_t short_addr, uint16_t, uint16_t, float);
   void (*_on_humidity_receive)(uint16_t short_addr, uint16_t, uint16_t, float);
   void (*_on_pressure_receive)(uint16_t short_addr, uint16_t, uint16_t, float);
-  void (*_on_pm25_receive)(uint16_t short_addr, uint16_t, uint16_t, float);
+  void (*_on_concentration_receive)(uint16_t short_addr, uint16_t, uint16_t, float);
   void (*_on_illuminance_receive)(uint16_t short_addr, uint16_t, uint16_t, uint16_t);
   void (*_on_flow_receive)(uint16_t short_addr, uint16_t, uint16_t, uint16_t);
   void (*_on_occupancy_receive)(uint16_t short_addr, uint16_t, uint16_t, uint8_t);
   void (*_on_on_off_receive)(uint16_t short_addr, uint16_t, uint16_t, bool);
   void (*_on_electrical_measurement_receive)(uint16_t short_addr, uint16_t, uint16_t, const esp_zb_zcl_attribute_t *);
+  void (*_on_binary_input_receive)(uint16_t short_addr, uint16_t, uint16_t, const esp_zb_zcl_attribute_t *);
   void (*_on_multistate_input_receive)(uint16_t short_addr, uint16_t, uint16_t, const esp_zb_zcl_attribute_t *);
   void (*_on_analog_input_receive)(uint16_t short_addr, uint16_t, uint16_t, const esp_zb_zcl_attribute_t *);
   void (*_on_metering_receive)(uint16_t short_addr, uint16_t, uint16_t, const esp_zb_zcl_attribute_t *);

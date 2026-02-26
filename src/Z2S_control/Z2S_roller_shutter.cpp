@@ -339,20 +339,18 @@ void Supla::Control::Z2S_RollerShutter::ping() {
       case Z2S_ROLLER_SHUTTER_FNC_WINDOW_COVERING_CLUSTER:
       case Z2S_ROLLER_SHUTTER_FNC_WINDOW_COVERING_CLUSTER_ALT:
 
-        if (zbGateway.sendAttributeRead(
+        zbGateway.sendAttributeRead(
           &_device, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, 
           ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_PERCENTAGE_ID, 
-          false)) { /*true))
-          if (*(esp_zb_zcl_status_t *)zbGateway.getReadAttrStatusLastResult() == ESP_ZB_ZCL_STATUS_SUCCESS) {
-            
-            _rs_current_position = *(uint8_t *)zbGateway.getReadAttrLastResult()->data.value;
-            setCurrentPosition(_rs_current_position);*/
-          }
+          false);
       break;
 
 
       case Z2S_ROLLER_SHUTTER_FNC_MOES_SHADES_DRIVE_MOTOR:
+      case Z2S_ROLLER_SHUTTER_FNC_MOES_COVER:
+      case Z2S_ROLLER_SHUTTER_FNC_CURRYSMARTER_COVER:
 
+        sendTuyaQueryCmd(&zbGateway, &_device);
       break;
     }
   }
@@ -441,14 +439,17 @@ void Supla::Control::Z2S_RollerShutter::iterateAlways() {
   if (_keep_alive_enabled && ((millis() - _last_ping_ms) > _keep_alive_ms)) {
     if (true) {
       
-      //_last_seen_ms = zbGateway.getZbgDeviceUnitLastSeenMs(_device.short_addr);
+      //_last_seen_ms = zbGateway.getZbgDeviceUnitLastSeenMs(_device.short_addr); 
+      if (_z2s_zb_device)
+        _last_seen_ms = _z2s_zb_device->last_seen_ms;
+      
       if ((millis() - _last_seen_ms) > _keep_alive_ms) {
       	ping();
         _last_ping_ms = millis();
       } else {
         _last_ping_ms = _last_seen_ms;
         if (!channel.isStateOnline()) 
-	  channel.setStateOnline();
+	        channel.setStateOnline();
       }
     }
   }
