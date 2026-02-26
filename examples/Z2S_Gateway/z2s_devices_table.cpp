@@ -2639,29 +2639,53 @@ void Z2S_onPressureReceive(
     msgZ2SDevicePressure(channel_number_slot, pressure);
 }
 
-void Z2S_onPM25Receive(
+void Z2S_onConcentrationReceive(
   uint16_t short_addr, uint16_t endpoint, uint16_t cluster, 
-  float pm25) {
+  float measured_value) {
 
-  char ieee_addr_str[24] = {};
 
-  //ieee_addr_to_str(ieee_addr_str, ieee_addr);
+  log_i("0x%04X, endpoint 0x%02X, cluster 0x%04X, concentration %f", 
+        short_addr, endpoint, cluster, measured_value);
 
-  log_i("%s, endpoint 0x%x, PM 2.5 %f", 
-        ieee_addr_str, endpoint, pm25);
+  switch (cluster) {
 
-  int16_t channel_number_slot = Z2S_findChannelNumberSlot(
-    short_addr, endpoint, cluster, 
-    SUPLA_CHANNELTYPE_GENERAL_PURPOSE_MEASUREMENT, 
-    IKEA_AIR_QUALITY_SENSOR_PM25_SID);
+
+    case ESP_ZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT: {
+
+      int16_t channel_number_slot = Z2S_findChannelNumberSlot(
+        short_addr, endpoint, cluster, 
+        SUPLA_CHANNELTYPE_GENERAL_PURPOSE_MEASUREMENT, 
+        IKEA_AIR_QUALITY_SENSOR_PM25_SID);
   
-  if (channel_number_slot < 0)
-    no_channel_found_error_func(short_addr);
-  else
-    msgZ2SDeviceGeneralPurposeMeasurement(
-      channel_number_slot, 
-      ZS2_DEVICE_GENERAL_PURPOSE_MEASUREMENT_FNC_PM25,
-      pm25);
+      if (channel_number_slot < 0)
+        no_channel_found_error_func(short_addr);
+      else
+        msgZ2SDeviceGeneralPurposeMeasurement(
+        channel_number_slot, 
+        ZS2_DEVICE_GENERAL_PURPOSE_MEASUREMENT_FNC_PM25,
+        measured_value);
+    } break;
+
+
+    case ESP_ZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT: {
+
+    } break;
+
+
+    case ZIBI_CUSTOM_CLUSTER_ID_CARBON_MONOXIDE_MESUREMENT: {
+
+      int16_t channel_number_slot = Z2S_findChannelNumberSlot(
+        short_addr, endpoint, cluster, 
+        SUPLA_CHANNELTYPE_GENERAL_PURPOSE_MEASUREMENT, NO_CUSTOM_CMD_SID);
+  
+      if (channel_number_slot < 0)
+        no_channel_found_error_func(short_addr);
+      else
+        msgZ2SDeviceGeneralPurposeMeasurement(
+        channel_number_slot, ZS2_DEVICE_GENERAL_PURPOSE_MEASUREMENT_FNC_PPM,
+        measured_value);
+    } break;
+  }
 }
 
 void Z2S_onIlluminanceReceive(
@@ -2767,7 +2791,7 @@ void Z2S_onThermostatTemperaturesReceive(
 
   //ieee_addr_to_str(ieee_addr_str, ieee_addr);
 
-  log_i("%s, endpoint 0x%x, attribute id 0x%x, temperature %d", 
+  log_i("0x%04X, endpoint 0x%x, attribute id 0x%x, temperature %d", 
         short_addr, endpoint, id, temperature);
 
   int16_t channel_number_slot_1 = Z2S_findChannelNumberSlot(
@@ -2831,7 +2855,7 @@ void Z2S_onThermostatModesReceive(
 
   //ieee_addr_to_str(ieee_addr_str, ieee_addr);
 
-  log_i("%s, endpoint 0x%x, attribute id 0x%x, mode %u", 
+  log_i("0x%04X, endpoint 0x%x, attribute id 0x%x, mode %u", 
         short_addr, endpoint, id, mode);
 
   int16_t channel_number_slot_2 = Z2S_findChannelNumberSlot(
@@ -2949,7 +2973,7 @@ void Z2S_onWindowCoveringReceive(
   //ieee_addr_to_str(ieee_addr_str, ieee_addr);
 
 
-  log_i("%s, endpoint 0x%x, attribute id 0x%x, value %u",  
+  log_i("0x%04X, endpoint 0x%x, attribute id 0x%x, value %u",  
         short_addr, endpoint, id, value);
 
   int16_t channel_number_slot = Z2S_findChannelNumberSlot(
@@ -3159,7 +3183,7 @@ void Z2S_onLumiCustomClusterReceive(
 
       if (channel_number_slot < 0) {
     
-        log_e("no channel found for address %s", ieee_addr_str);
+        log_e("no channel found for address 0x%04X", short_addr);
         return;
       }
 
@@ -3342,7 +3366,7 @@ void Z2S_onLumiCustomClusterReceive(
 
       if (channel_number_slot < 0) {
     
-        log_e("no binary channel found for address %s", ieee_addr_str);
+        log_e("no binary channel found for address 0x%04X", short_addr);
       
       } else {
 
@@ -3365,7 +3389,7 @@ void Z2S_onLumiCustomClusterReceive(
 
       if (channel_number_slot < 0) {
     
-        log_e("no EM channel found for address %s", ieee_addr_str);
+        log_e("no EM channel found for address 0x%04X", short_addr);
       
       } else {
 
@@ -3428,7 +3452,7 @@ void Z2S_onLumiCustomClusterReceive(
 
       if (channel_number_slot < 0) {
     
-        log_e("no T/H channel found for address %s", ieee_addr_str);
+        log_e("no T/H channel found for address 0x%04X", short_addr);
       } else {
 
         uint8_t lumi_temperature_position = scanLumiPayload(
@@ -3462,7 +3486,7 @@ void Z2S_onLumiCustomClusterReceive(
 
       if (channel_number_slot < 0) {
     
-        log_e("no GPM channel found for address %s", ieee_addr_str);
+        log_e("no GPM channel found for address 0x%04X", short_addr);
       } else {       
 
         uint8_t lumi_air_quality_position = scanLumiPayload(
@@ -3485,7 +3509,7 @@ void Z2S_onLumiCustomClusterReceive(
 
       if (channel_number_slot < 0) {
     
-        log_e("no GPM channel found for address %s", ieee_addr_str);
+        log_e("no GPM channel found for address 0x%04X", short_addr);
       } else {       
 
         uint8_t lumi_voc_position = scanLumiPayload(
@@ -3510,7 +3534,7 @@ void Z2S_onLumiCustomClusterReceive(
 
       if (channel_number_slot < 0) {
     
-        log_e("no channel found for address %s", ieee_addr_str);
+        log_e("no channel found for address 0x%04X", short_addr);
         return;
       }
 
@@ -3562,7 +3586,7 @@ void Z2S_onLumiCustomClusterReceive(
 
       if (channel_number_slot < 0) {
     
-        log_e("no GPM channel found for address %s", ieee_addr_str);
+        log_e("no GPM channel found for address 0x%04X", short_addr);
         return;
       }       
       msgZ2SDeviceGeneralPurposeMeasurement(
@@ -3587,7 +3611,7 @@ void Z2S_onLumiCustomClusterReceive(
                                   
       if (channel_number_slot < 0) {
     
-        log_e("no Hvac channel found for address %s", ieee_addr_str);
+        log_e("no Hvac channel found for address 0x%04X", short_addr);
         return;
       }
       uint8_t lumi_mode = *(uint8_t *)attribute->data.value;
@@ -3702,7 +3726,7 @@ void Z2S_onBasicReceive(
 
       if (channel_number_slot < 0) {
     
-        log_e("no channel found for address %s", ieee_addr_str);
+        log_e("no channel found for address 0x%04X", short_addr);
         return;
       }
 
@@ -3725,7 +3749,7 @@ void Z2S_onBasicReceive(
 
       if (channel_number_slot < 0) {
     
-        log_e("no binary channel found for address %s", ieee_addr_str);
+        log_e("no binary channel found for address 0x%04X", short_addr);
       } else {
 
         uint8_t lumi_contact_position = scanLumiPayload(
@@ -3747,7 +3771,7 @@ void Z2S_onBasicReceive(
 
       if (channel_number_slot < 0) {
     
-        log_e("no T/H channel found for address %s", ieee_addr_str);
+        log_e("no T/H channel found for address 0x%04X", short_addr);
         return;
       }
 
@@ -3781,7 +3805,7 @@ void Z2S_onBasicReceive(
 
       if (channel_number_slot < 0) {
     
-        log_e("no pressure channel found for address %s", ieee_addr_str);
+        log_e("no pressure channel found for address 0x%04X", short_addr);
         return;
       }       
 
@@ -4192,14 +4216,14 @@ void Z2S_onElectricalMeasurementReceive(
 
   if (channel_number_slot < 0) {
     
-    log_e("no electricity meter channel found for address %s", ieee_addr_str);
+    log_e("no electricity meter channel found for address 0x%04X", short_addr);
 
     return;
   }
 
   if (attribute->data.value == nullptr) {
       
-    log_e("missing data value for address %s", ieee_addr_str);
+    log_e("missing data value for address 0x%04X", short_addr);
 
     return;
   }
@@ -4479,6 +4503,38 @@ void Z2S_onElectricalMeasurementReceive(
 
 /******************************************************************************/
 
+void Z2S_onBinaryInputReceive(
+  uint16_t short_addr, uint16_t endpoint, uint16_t cluster, 
+  const esp_zb_zcl_attribute_t *attribute) {
+
+  log_i("0x%04X, endpoint 0x%x, attribute id 0x%x, size %u", 
+        short_addr, endpoint, attribute->id, attribute->data.size);
+
+  int16_t channel_number_slot = Z2S_findChannelNumberSlot(
+    short_addr, endpoint, cluster, ALL_SUPLA_CHANNEL_TYPES, NO_CUSTOM_CMD_SID);
+
+  if (channel_number_slot < 0) {
+    
+    log_e("no channel found for address 0x%04X", short_addr);
+    return;
+  }
+
+  if (attribute->data.value == nullptr) {
+      
+    log_e("missing data value for address 0x%04X", short_addr);
+    return;
+  }
+
+  switch (attribute->id) {
+
+
+    case ESP_ZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID: {
+    } break;
+  }
+}
+
+/******************************************************************************/
+
 void Z2S_onMultistateInputReceive(
   uint16_t short_addr, uint16_t endpoint, uint16_t cluster, 
   const esp_zb_zcl_attribute_t *attribute) {
@@ -4495,13 +4551,13 @@ void Z2S_onMultistateInputReceive(
 
   if (channel_number_slot < 0) {
     
-    log_e("no channel found for address %s", ieee_addr_str);
+    log_e("no channel found for address 0x%04X", short_addr);
     return;
   }
 
   if (attribute->data.value == nullptr) {
       
-    log_e("missing data value for address %s", ieee_addr_str);
+    log_e("missing data value for address 0x%04X", short_addr);
     return;
   }
 
@@ -4619,13 +4675,13 @@ void Z2S_onAnalogInputReceive(
 
   if (channel_number_slot < 0) {
     
-    log_e("no Supla channel found for address %s", ieee_addr_str);
+    log_e("no Supla channel found for address 0x%04X", short_addr);
     return;
   }
 
   if (attribute->data.value == nullptr) {
       
-    log_e("missing data value for address %s", ieee_addr_str);
+    log_e("missing data value for address 0x%04X", short_addr);
     return;
   }
 
@@ -4646,7 +4702,7 @@ void Z2S_onAnalogInputReceive(
 
           if (channel_number_slot < 0) {
     
-            log_e("no GPM channel found for address %s", ieee_addr_str);
+            log_e("no GPM channel found for address 0x%04X", short_addr);
             return;
           }       
           msgZ2SDeviceGeneralPurposeMeasurement(
@@ -4664,7 +4720,7 @@ void Z2S_onAnalogInputReceive(
           if (channel_number_slot < 0) {
     
             log_e(
-              "no RollerShutter channel found for address %s", ieee_addr_str);
+              "no RollerShutter channel found for address 0x%04X", short_addr);
             return;
           }       
           uint16_t lift_percentage = 100 - (*(float *)attribute->data.value);
@@ -4697,13 +4753,13 @@ void Z2S_onMeteringReceive(
 
   if (channel_number_slot < 0) {
     
-    log_e("no electricity meter channel found for address %s", ieee_addr_str);
+    log_e("no electricity meter channel found for address 0x%04X", short_addr);
     return;
   }
 
   if (attribute->data.value == nullptr) {
       
-    log_e("missing data value for address %s", ieee_addr_str);
+    log_e("missing data value for address 0x%04X", short_addr);
     return;
   }
 
@@ -5384,7 +5440,7 @@ bool Z2S_onCustomCmdReceive(
 
       if (channel_number_slot < 0)
         log_i(
-          "No Enki smart remote channel found for address %s", ieee_addr_str);
+          "No Enki smart remote channel found for address 0x%04X", short_addr);
       else 
         msgZ2SDeviceActionTriggerV2(channel_number_slot, sub_id);
       return true;
@@ -5449,7 +5505,7 @@ bool Z2S_onCustomCmdReceive(
 
       if (channel_number_slot < 0)
         log_i(
-          "No Livarno device channel found for address %s", ieee_addr_str);
+          "No Livarno device channel found for address 0x%04X", short_addr);
       else 
         msgZ2SDeviceActionTriggerV2(channel_number_slot, sub_id);
       return true;
@@ -5512,7 +5568,68 @@ bool Z2S_onCustomCmdReceive(
           sub_id = IKEA_CUSTOM_CMD_BUTTON_3_PRESSED_SID;
         else if (compareBuffer(buffer, buffer_size, "00010D00"))
           sub_id = IKEA_CUSTOM_CMD_BUTTON_4_PRESSED_SID;
-      }  
+      }  else 
+        if ((cluster_id == ESP_ZB_ZCL_CLUSTER_ID_SCENES) && 
+            (command_id == 0x09)) {
+
+          channel_number_slot = Z2S_findChannelNumberSlot(
+            short_addr, endpoint, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, 
+            SUPLA_CHANNELTYPE_ACTIONTRIGGER, 
+            IKEA_CUSTOM_CMD_BUTTON_3_HELD_SID);
+
+          if (channel_number_slot < 0)
+            log_i(
+              "No IKEA device channel found for address 0x%04X", short_addr);
+          else 
+            msgZ2SDeviceActionTriggerV2(
+              channel_number_slot, IKEA_CUSTOM_CMD_BUTTON_3_HELD_SID, 2);
+
+          channel_number_slot = Z2S_findChannelNumberSlot(
+            short_addr, endpoint, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, 
+            SUPLA_CHANNELTYPE_ACTIONTRIGGER, 
+            IKEA_CUSTOM_CMD_BUTTON_4_HELD_SID);
+
+          if (channel_number_slot < 0)
+            log_i(
+              "No IKEA device channel found for address 0x%04X", short_addr);
+          else 
+            msgZ2SDeviceActionTriggerV2(
+              channel_number_slot, IKEA_CUSTOM_CMD_BUTTON_4_HELD_SID, 2);
+          return true;
+        } else
+          if ((cluster_id == ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL) && 
+            (command_id == 0x07)) {
+
+          channel_number_slot = Z2S_findChannelNumberSlot(
+            short_addr, endpoint, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, 
+            SUPLA_CHANNELTYPE_ACTIONTRIGGER, 
+            IKEA_CUSTOM_CMD_BUTTON_1_HELD_SID);
+
+          if (channel_number_slot < 0)
+            log_i(
+              "No IKEA device channel found for address 0x%04X", short_addr);
+          else 
+            msgZ2SDeviceActionTriggerV2(
+              channel_number_slot, IKEA_CUSTOM_CMD_BUTTON_1_HELD_SID, 2);
+          return true;
+        } else
+          if ((cluster_id == ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL) && 
+            (command_id == 0x03)) { 
+
+          channel_number_slot = Z2S_findChannelNumberSlot(
+            short_addr, endpoint, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, 
+            SUPLA_CHANNELTYPE_ACTIONTRIGGER, 
+            IKEA_CUSTOM_CMD_BUTTON_2_HELD_SID);
+
+          if (channel_number_slot < 0)
+            log_i(
+              "No IKEA device channel found for address 0x%04X", short_addr);
+          else 
+            msgZ2SDeviceActionTriggerV2(
+              channel_number_slot, IKEA_CUSTOM_CMD_BUTTON_2_HELD_SID, 2);
+          return true;
+      }
+        
       if (sub_id == 0x7F) return false;
 
       channel_number_slot = Z2S_findChannelNumberSlot(
@@ -5520,9 +5637,11 @@ bool Z2S_onCustomCmdReceive(
         SUPLA_CHANNELTYPE_ACTIONTRIGGER, sub_id);
 
       if (channel_number_slot < 0)
-        log_i("No IKEA device channel found for address %s", ieee_addr_str);
-      else 
-        msgZ2SDeviceActionTriggerV2(channel_number_slot, sub_id);
+        log_i("No IKEA device channel found for address 0x%04X", short_addr);
+      else {
+        uint8_t hold_start = ((sub_id % 2) == 1) ? 1 : 0;
+        msgZ2SDeviceActionTriggerV2(channel_number_slot, sub_id, hold_start);
+      }
       return true;
     } break;
 
@@ -5568,7 +5687,7 @@ bool Z2S_onCustomCmdReceive(
           SUPLA_CHANNELTYPE_ACTIONTRIGGER, sub_id);
 
         if (channel_number_slot < 0)
-          log_i("No Tuya device channel found for address %s", ieee_addr_str);
+          log_i("No Tuya device channel found for address 0x%04X", short_addr);
         else 
           msgZ2SDeviceActionTriggerV2(channel_number_slot, sub_id);
 
@@ -6507,7 +6626,7 @@ uint8_t Z2S_addZ2SDevice(
       case Z2S_DEVICE_DESC_DEVELCO_RELAY_ELECTRICITY_METER:
       case Z2S_DEVICE_DESC_BOSCH_RELAY_ELECTRICITY_METER:
       case Z2S_DEVICE_DESC_LUMI_SMART_WALL_OUTLET:
-	  case Z2S_DEVICE_DESC_SHELLY_RELAY_ELECTRICITY_METER: {
+      case Z2S_DEVICE_DESC_SHELLY_RELAY_ELECTRICITY_METER: {
         
         addZ2SDeviceVirtualRelay(&zbGateway,device, first_free_slot);
         
@@ -7519,6 +7638,7 @@ uint8_t Z2S_addZ2SDevice(
 
 /******************************************************************************/     
 
+      case Z2S_DEVICE_DESC_WINDOW_COVERING_SINGLE:
       case Z2S_DEVICE_DESC_TUYA_WINDOW_COVERING_SINGLE:
 
         addZ2SDeviceVirtualRelay(
@@ -7695,6 +7815,8 @@ uint8_t Z2S_addZ2SDevice(
         } 
       } break;
 
+/******************************************************************************/
+
       case Z2S_DEVICE_DESC_TUYA_TS0603_GATE_CONTROLLER: {
 
         addZ2SDeviceIASzone(
@@ -7715,7 +7837,16 @@ uint8_t Z2S_addZ2SDevice(
           &zbGateway, device, first_free_slot, NO_CUSTOM_CMD_SID, 
           "OPEN/CLOSE GATE", SUPLA_CHANNELFNC_CONTROLLINGTHEGATE);
       } break;
+
+/******************************************************************************/
     
+      case Z2S_DEVICE_DESC_ZIBI_CUSTOM_CO_SENSOR:
+
+        addZ2SDeviceGeneralPurposeMeasurement(
+              device, first_free_slot, NO_CUSTOM_CMD_SID, "CO CONCENTRATION", 
+              SUPLA_CHANNELFNC_GENERAL_PURPOSE_MEASUREMENT, "ppm"); 
+          break;
+
 /******************************************************************************/     
 
       default : {
@@ -7915,6 +8046,19 @@ void updateTimeout(
 
         if (selector & 4)
           Supla_Z2S_ElectricityMeter->setRefreshSecs(timings_secs);
+      } break;
+
+
+      case SUPLA_CHANNELTYPE_VALVE_OPENCLOSE: {
+
+        auto Supla_Z2S_VirtualValve = 
+          reinterpret_cast<Supla::Control::Z2S_VirtualValve *>(element);
+
+        if (selector & 1)
+          Supla_Z2S_VirtualValve->setKeepAliveSecs(timings_secs);
+
+        if (selector & 2)
+          Supla_Z2S_VirtualValve->setTimeoutSecs(timings_secs);
       } break;
 
 
@@ -10281,8 +10425,7 @@ case Z2S_DEVICE_DESC_TUYA_SOIL_SENSOR_4F: {
 
 /*****************************************************************************/
 
-    default: Z2S_addZ2SDevice(
-      joined_device, NO_CUSTOM_CMD_SID);
+    default: Z2S_addZ2SDevice(joined_device, NO_CUSTOM_CMD_SID);
   }
 }
 
