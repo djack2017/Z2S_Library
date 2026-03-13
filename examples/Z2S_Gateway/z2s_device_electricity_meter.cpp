@@ -32,6 +32,8 @@ void initZ2SDeviceElectricityMeter(
   uint32_t  energy_multiplier = 0;
   uint32_t  energy_divisor = 0;
 
+  int64_t  fwd_energy_counter = 0;
+
   bool ignore_zigbee_scaling = false;
 
   switch (z2s_channels_table[channel_number_slot].model_id) {
@@ -155,9 +157,25 @@ void initZ2SDeviceElectricityMeter(
       active_power_divisor    = 10;
 
       energy_multiplier = 1;
-      energy_divisor  = 1; //100;?@slawek?
+      energy_divisor  = 100;
       
       ignore_zigbee_scaling = true;
+
+      if (!Z2S_checkChannelFlags(
+        channel_number_slot, USER_DATA_FLAG_EXTENDED_DATA_COUNTER)) {
+        
+        fwd_energy_counter = 
+          z2s_channels_table[channel_number_slot].data_counter;
+
+        Z2S_initChannelExtendedDataCounter(channel_number_slot);
+        Z2S_setChannelExtendedDataCounter(
+          channel_number_slot, fwd_energy_counter);
+      } else 
+        fwd_energy_counter = Z2S_getChannelExtendedDataCounter(
+          channel_number_slot);
+
+        z2s_channels_table[channel_number_slot].fwd_energy_buffer = 0;
+        z2s_channels_table[channel_number_slot].fwd_energy_timer = millis();
     } break;
 
 
@@ -234,7 +252,8 @@ void initZ2SDeviceElectricityMeter(
     } break;
 
 
-    case Z2S_DEVICE_DESC_LUMI_SMART_WALL_OUTLET: {
+    case Z2S_DEVICE_DESC_LUMI_SMART_WALL_OUTLET:
+    case Z2S_DEVICE_DESC_LUMI_RELAY_ELECTRICITY_METER: {
 
       ignore_zigbee_scaling = true;
 
@@ -246,10 +265,29 @@ void initZ2SDeviceElectricityMeter(
       current_divisor_modifier = 100;
 
       active_power_multiplier = 1;
-      active_power_divisor    = 1;
+      active_power_divisor    = 100;
 
       energy_multiplier = 1;
       energy_divisor  = 1000;
+    } break;
+
+
+    case Z2S_DEVICE_DESC_LUMI_DOUBLE_RELAY_ELECTRICITY_METER: {
+
+      ignore_zigbee_scaling = true;
+
+      voltage_multiplier = 1;
+      voltage_divisor    = 100;
+
+      current_multiplier = 1;
+      current_divisor    = 1000;
+      current_divisor_modifier = 100;
+
+      active_power_multiplier = 1;
+      active_power_divisor    = 10;
+
+      energy_multiplier = 1;
+      energy_divisor  = 1000000;
     } break;
 
 
@@ -279,7 +317,43 @@ void initZ2SDeviceElectricityMeter(
       energy_divisor  = 100;
 
     ignore_zigbee_scaling = true;
-  }                                         
+  }
+
+  //test case
+  /*if (strcmp(Z2S_getZbDeviceManufacturerName(
+       z2s_channels_table[channel_number_slot].Zb_device_id),
+      "ADEO") == 0) {
+
+    voltage_multiplier = 1;
+    voltage_divisor = 1;
+
+    current_multiplier = 1;
+    current_divisor    = 1000;
+
+    active_power_multiplier = 1;
+    active_power_divisor = 1;
+
+    energy_multiplier = 1;
+    energy_divisor  = 100;
+
+    ignore_zigbee_scaling = true;
+
+    if (!Z2S_checkChannelFlags(
+        channel_number_slot, USER_DATA_FLAG_EXTENDED_DATA_COUNTER)) {
+        
+      fwd_energy_counter = 
+        z2s_channels_table[channel_number_slot].data_counter;
+
+      Z2S_initChannelExtendedDataCounter(channel_number_slot);
+      Z2S_setChannelExtendedDataCounter(
+        channel_number_slot, fwd_energy_counter);
+    } else
+      fwd_energy_counter = Z2S_getChannelExtendedDataCounter(
+        channel_number_slot);
+
+      z2s_channels_table[channel_number_slot].fwd_energy_buffer = 0;
+      z2s_channels_table[channel_number_slot].fwd_energy_timer = millis();
+  }*/                                        
 
   Supla_Z2S_ElectricityMeter->getChannel()->setChannelNumber(
     z2s_channels_table[channel_number_slot].Supla_channel);
@@ -358,6 +432,9 @@ void initZ2SDeviceElectricityMeter(
 
   Supla_Z2S_ElectricityMeter->setEnergyMultiplier(energy_multiplier, false);
   Supla_Z2S_ElectricityMeter->setEnergyDivisor(energy_divisor, false);
+
+  if (fwd_energy_counter)
+    Supla_Z2S_ElectricityMeter->setFwdActEnergy2(0, fwd_energy_counter);
 }
 
 /*****************************************************************************/
@@ -374,7 +451,9 @@ void addZ2SDeviceElectricityMeter(
   
   channel_extended_data_em_t channel_extended_data_em = {};
 
-  memcpy(channel_extended_data_em.ieee_addr, device->ieee_addr, sizeof(esp_zb_ieee_addr_t));
+  memcpy(
+    channel_extended_data_em.ieee_addr, device->ieee_addr, 
+    sizeof(esp_zb_ieee_addr_t));
 
   Z2S_fillChannelsTableSlot(
     device, free_slot, Supla_Z2S_ElectricityMeter->getChannelNumber(), 
@@ -400,18 +479,7 @@ void updateZ2SDeviceElectricityMeter(int16_t channel_number_slot) {
     log_i("EM channel extended data successfully UPDATED (counters zeroed)"); 
 }
 
-/*---------------------------------------------------------------------------------------------------------------------------*/
-
-int8_t findDeviceSlotByShortAddr(uint16_t short_addr) {
-    for (int i = 0; i < Z2S_ZB_DEVICES_MAX_NUMBER; i++) {
-        if (z2s_zb_devices_table[i].short_addr == short_addr) {
-            return i;
-        }
-    }
-    return -1; // nie znaleziono
-}
-
-/*---------------------------------------------------------------------------------------------------------------------------*/
+/*****************************************************************************/
 
 void msgZ2SDeviceElectricityMeter(
   int16_t channel_number_slot, uint8_t emv_selector, int64_t em_value) {
@@ -431,11 +499,11 @@ void msgZ2SDeviceElectricityMeter(
        
     Supla_ElectricityMeter->pong();
         
-    log_i("selector 0x%x, value %lld", emv_selector, em_value);
+    log_i("selector %u, value %lld", emv_selector, em_value);
 	int8_t device_slot = findDeviceSlotByShortAddr(z2s_channels_table[channel_number_slot].short_addr);
-        
-    switch (emv_selector) {
 
+    switch (emv_selector) {
+      
       case Z2S_EM_VOLTAGE_A_SEL: 
 		Supla_ElectricityMeter->setVoltage2(0, em_value);
 		snprintf(xvalue, sizeof(xvalue), "%d", (int)em_value);
@@ -482,6 +550,31 @@ void msgZ2SDeviceElectricityMeter(
         Supla_ElectricityMeter->setPowerApparent2(0, em_value); 
       break;
 
+      //this is special case, when meter report only changes in energy value
+      case Z2S_EM_ACT_FWD_ENERGY_A_DELTA_SEL: { 
+        
+        z2s_channels_table[channel_number_slot].fwd_energy_buffer += em_value;
+         
+        if ((z2s_channels_table[channel_number_slot].\
+              fwd_energy_buffer >= 100) || 
+            ((millis() - z2s_channels_table[channel_number_slot].\
+              fwd_energy_timer) >= 1800000)) {
+
+          uint64_t fwd_energy_counter = 
+            Z2S_getChannelExtendedDataCounter(channel_number_slot) +
+            z2s_channels_table[channel_number_slot].fwd_energy_buffer;
+
+          Z2S_setChannelExtendedDataCounter(
+            channel_number_slot, fwd_energy_counter);
+
+          z2s_channels_table[channel_number_slot].fwd_energy_buffer = 0;  
+          z2s_channels_table[channel_number_slot].fwd_energy_timer = millis();  
+          
+          Supla_ElectricityMeter->setFwdActEnergy2(0, fwd_energy_counter);
+        }
+      }
+      break;
+      
       case Z2S_EM_VOLTAGE_B_SEL: 
 //		printf("4 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setVoltage2(1, em_value); 
@@ -561,6 +654,7 @@ void msgZ2SDeviceElectricityMeter(
 //		printf("19 0x%x, value %lld\n", emv_selector, em_value);
         Supla_ElectricityMeter->setPowerApparent2(2, em_value); 
       break;
+
 
       case Z2S_EM_AC_FREQUENCY: 
         Supla_ElectricityMeter->setFreq2(em_value);
