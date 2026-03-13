@@ -500,10 +500,7 @@ void msgZ2SDeviceElectricityMeter(
     Supla_ElectricityMeter->pong();
         
     log_i("selector %u, value %lld", emv_selector, em_value);
-<<<<<<< HEAD
 	int8_t device_slot = findDeviceSlotByShortAddr(z2s_channels_table[channel_number_slot].short_addr);
-=======
->>>>>>> upstream/main
 
     switch (emv_selector) {
       
@@ -555,34 +552,6 @@ void msgZ2SDeviceElectricityMeter(
 
       //this is special case, when meter report only changes in energy value
       case Z2S_EM_ACT_FWD_ENERGY_A_DELTA_SEL: { 
-<<<<<<< HEAD
-=======
-        
-        z2s_channels_table[channel_number_slot].fwd_energy_buffer += em_value;
-         
-        if ((z2s_channels_table[channel_number_slot].\
-              fwd_energy_buffer >= 100) || 
-            ((millis() - z2s_channels_table[channel_number_slot].\
-              fwd_energy_timer) >= 1800000)) {
-
-          uint64_t fwd_energy_counter = 
-            Z2S_getChannelExtendedDataCounter(channel_number_slot) +
-            z2s_channels_table[channel_number_slot].fwd_energy_buffer;
-
-          Z2S_setChannelExtendedDataCounter(
-            channel_number_slot, fwd_energy_counter);
-
-          z2s_channels_table[channel_number_slot].fwd_energy_buffer = 0;  
-          z2s_channels_table[channel_number_slot].fwd_energy_timer = millis();  
-          
-          Supla_ElectricityMeter->setFwdActEnergy2(0, fwd_energy_counter);
-        }
-      }
-      break;
-
-      
-      case Z2S_EM_VOLTAGE_B_SEL: 
->>>>>>> upstream/main
         
         z2s_channels_table[channel_number_slot].fwd_energy_buffer += em_value;
          
