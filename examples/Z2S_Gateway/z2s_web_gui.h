@@ -21,8 +21,12 @@ typedef enum gui_modes {
   gateway_ca_tcc_mode = 9,
   gateway_devices_channels_mode = 10,
   gateway_no_local_actions_mode = 11,
+  full_ad_gui_mode = 12,
+  full_sb_gui_mode = 13,
   gui_modes_number
 } gui_modes_t;
+
+size_t mbstrnlen(const char *mb_str, size_t max_bytes);
 
 bool Z2S_isGUIStarted();
 bool Z2S_isGUIBuilt();

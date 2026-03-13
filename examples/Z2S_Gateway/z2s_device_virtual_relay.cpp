@@ -1,7 +1,7 @@
 #include "z2s_device_virtual_relay.h"
 #include "TuyaDatapoints.h"
 
-/*---------------------------------------------------------------------------------------------------------------------------*/
+/*****************************************************************************/
 
 void initZ2SDeviceVirtualRelay(
   ZigbeeGateway *gateway, zbg_device_params_t *device, 
@@ -101,7 +101,8 @@ void initZ2SDeviceVirtualRelay(
       case Z2S_DEVICE_DESC_TUYA_DIN_RCBO_EM_TEMP:
       case Z2S_DEVICE_DESC_TUYA_PRESENCE_SENSOR_ZYM10024GV3:
       case Z2S_DEVICE_DESC_TUYA_DP_RELAY:
-      case Z2S_DEVICE_DESC_TUYA_TS0603_GATE_CONTROLLER: {
+      case Z2S_DEVICE_DESC_TUYA_TS0603_GATE_CONTROLLER:
+      case Z2S_DEVICE_DESC_TUYA_PRESENCE_SENSOR_SZLR08T: {
 
             z2s_function = Z2S_VIRTUAL_RELAY_FNC_TUYA_DP_RELAY; 
       } break;
@@ -323,6 +324,27 @@ void initZ2SDeviceVirtualRelay(
       break;
 
 
+      case Z2S_DEVICE_DESC_TUYA_PRESENCE_SENSOR_SZLR08T: {
+
+        switch (z2s_channels_table[channel_number_slot].sub_id) {
+
+
+          case TUYA_PRESENCE_SENSOR_RELAY_SWITCH_SID:
+
+            Supla_Z2S_VirtualRelay->Z2S_setFunctionValueU8(
+              TUYA_PRESENCE_SENSOR_SZLR08T_RELAY_SWITCH_DP);
+          break;
+
+
+          case TUYA_PRESENCE_SENSOR_RADAR_SWITCH_SID:
+
+            Supla_Z2S_VirtualRelay->Z2S_setFunctionValueU8(
+              TUYA_PRESENCE_SENSOR_SZLR08T_RADAR_SWITCH_DP);
+          break;
+        };
+      } break;
+
+
     case Z2S_DEVICE_DESC_TUYA_TS0603_GATE_CONTROLLER:
 
         Supla_Z2S_VirtualRelay->Z2S_setFunctionValueU8(
@@ -375,7 +397,7 @@ void initZ2SDeviceVirtualRelay(
   }
 }
 
-/*---------------------------------------------------------------------------------------------------------------------------*/
+/*****************************************************************************/
 
 void addZ2SDeviceVirtualRelay(
   ZigbeeGateway *gateway, zbg_device_params_t *device, uint8_t free_slot, 

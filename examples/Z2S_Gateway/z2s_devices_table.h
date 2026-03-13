@@ -1,6 +1,8 @@
 #ifndef Z2S_DEVICES_TABLE_H_
 #define Z2S_DEVICES_TABLE_H_
 
+#include <Preferences.h>
+
 #include <ZigbeeGateway.h>
 #include "z2s_devices_database.h"
 #include "priv_auth_data.h"
@@ -29,6 +31,8 @@
 #include <Z2S_common.h>
 #include "z2s_web_gui.h"
 
+#include <Z2S_control/Z2S_local_action_handlers.h>
+
 #define Z2S_ZB_DEVICES_MAX_NUMBER                               0x20  //32
 #define Z2S_CHANNELS_MAX_NUMBER                                 0x80  //128
 #define Z2S_ACTIONS_MAX_NUMBER                                  0x100 //256
@@ -46,22 +50,24 @@
 #define ADD_Z2S_DEVICE_STATUS_DT_FWA                            0x03  //device table full while adding = device added partialy
 #define ADD_Z2S_DEVICE_STATUS_DAP                               0x04  //device already present
 
-#define USER_DATA_FLAG_SED_TIMEOUT                              (1 << 0)  // 0x0001
-#define USER_DATA_FLAG_MSG_DISABLED                             (1 << 1)  // 0x0002
+#define USER_DATA_FLAG_SED_TIMEOUT                              (1 << 0)  // 0x00001
+#define USER_DATA_FLAG_MSG_DISABLED                             (1 << 1)  // 0x00002
 
-#define USER_DATA_FLAG_CORRECTIONS_DISABLED                     (1 << 2)  // 0x0004
-#define USER_DATA_FLAG_TRV_AUTO_TO_SCHEDULE                     (1 << 3)  // 0x0008
-#define USER_DATA_FLAG_TRV_IGNORE_NEXT_MSG                      (1 << 4)  // 0x0010
-#define USER_DATA_FLAG_DISABLE_NOTIFICATIONS                    (1 << 5)  // 0x0020
-#define USER_DATA_FLAG_SET_SORWNS_ON_START                      (1 << 6)  // 0x0040
-#define USER_DATA_FLAG_HAS_EXTENDED_DATA                        (1 << 7)  // 0x0080
-#define USER_DATA_FLAG_TRV_FIXED_CORRECTION                     (1 << 8)  // 0x0100
-#define USER_DATA_FLAG_TRV_AUTO_TO_SCHEDULE_MANUAL              (1 << 9)  // 0x0200
-#define USER_DATA_FLAG_TRV_COOPERATIVE_CHILDLOCK                (1 << 10) // 0x0400
-#define USER_DATA_FLAG_ENABLE_RESEND_TEMPERATURE                (1 << 11) // 0x0800
-#define USER_DATA_FLAG_REMOTE_ADDRESS_TYPE_MDNS                 (1 << 12) // 0x1000
-#define USER_DATA_FLAG_ACTION_TRIGGER_VERSION_2_0               (1 << 13) // 0x2000
-#define USER_DATA_FLAG_SKIP_SUBDEVICE_REGISTRATION              (1 << 14) // 0x4000
+#define USER_DATA_FLAG_CORRECTIONS_DISABLED                     (1 << 2)  // 0x00004
+#define USER_DATA_FLAG_TRV_AUTO_TO_SCHEDULE                     (1 << 3)  // 0x00008
+#define USER_DATA_FLAG_TRV_IGNORE_NEXT_MSG                      (1 << 4)  // 0x00010
+#define USER_DATA_FLAG_DISABLE_NOTIFICATIONS                    (1 << 5)  // 0x00020
+#define USER_DATA_FLAG_SET_SORWNS_ON_START                      (1 << 6)  // 0x00040
+#define USER_DATA_FLAG_HAS_EXTENDED_DATA                        (1 << 7)  // 0x00080
+#define USER_DATA_FLAG_TRV_FIXED_CORRECTION                     (1 << 8)  // 0x00100
+#define USER_DATA_FLAG_TRV_AUTO_TO_SCHEDULE_MANUAL              (1 << 9)  // 0x00200
+#define USER_DATA_FLAG_TRV_COOPERATIVE_CHILDLOCK                (1 << 10) // 0x00400
+#define USER_DATA_FLAG_ENABLE_RESEND_TEMPERATURE                (1 << 11) // 0x00800
+#define USER_DATA_FLAG_REMOTE_ADDRESS_TYPE_MDNS                 (1 << 12) // 0x01000
+#define USER_DATA_FLAG_ACTION_TRIGGER_VERSION_2_0               (1 << 13) // 0x02000
+#define USER_DATA_FLAG_SKIP_SUBDEVICE_REGISTRATION              (1 << 14) // 0x04000
+#define USER_DATA_FLAG_EXTENDED_DATA_COUNTER                    (1 << 15) // 0x08000
+#define USER_DATA_FLAG_IGNORE_CHANNEL_BATTERY_LEVEL             (1 << 16) // 0x10000
 
 #define ZBD_USER_DATA_FLAG_VERSION_2_0                          (1 << 0)
 #define ZBD_USER_DATA_FLAG_BINDING_REQUIRED                     (1 << 1)
@@ -246,21 +252,26 @@ extern uint8_t z2s_actions_index_table[Z2S_ACTIONS_MAX_NUMBER / 8];  //bit-index
 //const static char   Z2S_CHANNELS_ACTIONS_TABLE_SIZE []  PROGMEM = "Z2S_actions_ts";
 
 const static char Z2S_CHANNELS_ACTIONS_INDEX_TABLE[] PROGMEM = "Z2S_actions_i";
-const static char Z2S_CHANNELS_ACTIONS_INDEX_TABLE_V2[] PROGMEM = "actions_index_table.z2s";
+const static char Z2S_CHANNELS_ACTIONS_INDEX_TABLE_V2[] PROGMEM = 
+  "actions_index_table.z2s";
 const static char Z2S_CHANNELS_ACTIONS_PPREFIX[] PROGMEM = "Z2S_an_";
-const static char Z2S_CHANNELS_ACTIONS_PPREFIX_V2[] PROGMEM = "action_%04d.z2s";
+const static char Z2S_CHANNELS_ACTIONS_PPREFIX_V2[] PROGMEM = 
+  "action_%04d.z2s";
 const static char Z2S_CHANNELS_ACTIONS_NUMBER[] PROGMEM = "Z2S_actions_n";
 
 
 const static char Z2S_FILES_STRUCTURE_VERSION[] PROGMEM = "Z2S_files_ver";
 
-const static char Z2S_CHANNELS_EXTENDED_DATA_PPREFIX_V2[] PROGMEM = "channel_ext_data_%03d_%02d.z2s";
+const static char Z2S_CHANNELS_EXTENDED_DATA_PPREFIX_V2[] PROGMEM =
+  "channel_ext_data_%03d_%02d.z2s";
 
 extern bool sendIASNotifications;
 
 //static NetworkClient Z2S_NetworkClient;
 
 extern char GatewayMDNSLocalName[12];
+
+extern Preferences Z2S_GatewayPreferences;
 
 //extern Supla::Sensor::GeneralPurposeMeasurement *Test_GeneralPurposeMeasurement;
 
@@ -274,6 +285,7 @@ const static char Z2S_FORCE_CONFIG_ON_START[] PROGMEM = "Z2S_force_cfg";
 const static char Z2S_REBUILD_CHANNELS_ON_START[] PROGMEM = "Z2S_rebuild";
 const static char Z2S_USE_NEW_AT_MODEL[] PROGMEM = "Z2S_new_at";
 const static char Z2S_GATEWAY_MDNS_LOCAL_NAME[] PROGMEM = "Z2S_mdns_name";
+const static char Z2S_AUTO_CONNECTION_RESET_TIMEOUT[] PROGMEM = "Z2S_acrt";
 
 namespace Supla {
 enum Conditions {
@@ -413,6 +425,9 @@ bool Z2S_updateZbDeviceUidIdx(
 
 Supla::Element *Z2S_getSuplaElementByChannelNumber(uint8_t channel_id);
 
+Supla::Control::SwitchBotRelay *Z2S_getSwitchBotRelayInstance(
+  int16_t channel_number_slot, uint8_t channel_number = 0xFF);
+
 /*****************************************************************************/
 
 void Z2S_initSuplaChannels();
@@ -459,6 +474,22 @@ bool Z2S_loadChannelExtendedData(
   int16_t channel_number_slot, uint8_t extended_data_type,
   uint8_t *extended_data);
 
+
+/*****************************************************************************/
+static const char *no_extended_data_counter_key = 
+  "no edc key";
+
+static const char *invalid_extended_data_counter_key = 
+  "invalid edc key";
+
+bool Z2S_initChannelExtendedDataCounter(int16_t channel_number_slot);
+bool Z2S_removeChannelExtendedDataCounter(int16_t channel_number_slot);
+const char *Z2S_Z2S_getChannelExtendedDataCounterKey(int16_t channel_number_slot);
+
+uint64_t  Z2S_getChannelExtendedDataCounter(int16_t channel_number_slot);
+
+bool Z2S_setChannelExtendedDataCounter(
+  int16_t channel_number_slot, uint64_t extended_data_counter);
 
 /*****************************************************************************/
 

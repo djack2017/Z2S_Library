@@ -42,10 +42,13 @@
 #include "z2s_devices_database.h"
 #include "z2s_devices_table.h"
 #include "z2s_device_general_purpose_measurement.h"
+#include "z2s_device_electricity_meter.h"
+#include "z2s_device_iaszone.h"
 #include "z2s_version_info.h"
 #include "priv_auth_data.h"
 #include "z2s_web_gui.h"
 #include "web_gui_templates.h"
+#include "z2s_little_fs.h"
 
 #ifdef USE_TELNET_CONSOLE
 
@@ -117,6 +120,8 @@ constexpr uint8_t NUM_LEDS  = 1;
 uint32_t refresh_time       = 0;
 uint8_t refresh_cycle       = 0;
 
+uint32_t test_loop_ms       = 0;
+
 uint32_t _init_devices_ms   = 0;
 
 uint32_t _time_cluster_last_refresh_ms = 0;
@@ -126,7 +131,9 @@ int8_t  _enable_gui_on_start  = 1;
 uint8_t	_force_config_on_start = 0;
 uint8_t _rebuild_Supla_channels_on_start = 0;
 uint8_t _use_new_at_model = 1;
-int32_t _gui_start_delay      = 0;
+int32_t _gui_start_delay = 0;
+//1.4.81-06/03/26 - 
+int32_t _auto_connection_reset_timeout = 0; 
 
 bool _initial_gui_check = true;
 
@@ -137,8 +144,9 @@ Supla::Control::VirtualRelay *toggleNotifications = nullptr;
 
 
 
-bool _restart_scheduled = false;
-bool _forced_config = false;
+static bool _restart_scheduled = false;
+static bool _forced_config = false;
+static bool _start_Zigbee = true;
 
 void initGUI(gui_modes_t mode = minimal_gui_mode) {
 
@@ -187,23 +195,40 @@ void supla_callback_bridge(int event, int action) {
 
     case Z2S_SUPLA_ACTION_DEVICE_STATUS_CHANGE: {
 
-      if (_restart_scheduled)
-        return;
+      //if (_restart_scheduled)
+      //  return;
 
       int8_t sd_current_status = SuplaDevice.getCurrentStatus();
+      log_i("Supla device status changed to %u", sd_current_status);
+
+      if ((sd_current_status == STATUS_UNKNOWN_SERVER_ADDRESS) || 
+          (sd_current_status == STATUS_MISSING_CREDENTIALS)) {
+
+            //_forced_config = true;
+            //_start_Zigbee = false;
+          }
+
+      if (sd_current_status == STATUS_SOFTWARE_RESET) {
+
+        disableZ2SNotifications();
+
+        log_i("software reset - stopping Zigbee stack");
+  
+        Zigbee.stop();
+        delay(500);
+
+        log_i("software reset - saving tables");
+        Z2S_saveChannelsTable();
+        Z2S_saveZbDevicesTable();
+        return;
+      }
 
       if (sd_current_status == STATUS_INITIALIZED) {
 
         handleGatewayEvent(Z2S_SUPLA_EVENT_ON_SUPLA_INITIALIZED);
-        return;
-      }
-
-      if (sd_current_status == STATUS_REGISTERED_AND_READY)
-        handleGatewayEvent(Z2S_SUPLA_EVENT_ON_SUPLA_REGISTERED_AND_READY);
-  
-      if ((!Zigbee.started()) && 
-          (sd_current_status == STATUS_REGISTERED_AND_READY)) {
-  
+        
+        if (_start_Zigbee && (!Zigbee.started())) {
+        
         log_i("Starting Zigbee subsystem");
     
         esp_coex_wifi_i154_enable();
@@ -216,9 +241,17 @@ void supla_callback_bridge(int event, int action) {
           _restart_scheduled = true;
           SuplaDevice.scheduleSoftRestart(1000);
         }
+        esp_coex_wifi_i154_enable();
         zbGateway.clearLocalBindings();
         handleGatewayEvent(Z2S_SUPLA_EVENT_ON_ZIGBEE_STARTED);
-        
+        }
+        return;
+      }
+
+      if (sd_current_status == STATUS_REGISTERED_AND_READY) {
+
+        handleGatewayEvent(Z2S_SUPLA_EVENT_ON_SUPLA_REGISTERED_AND_READY);
+      
         refresh_time = 0;
         _init_devices_ms = millis();
         
@@ -236,7 +269,7 @@ void supla_callback_bridge(int event, int action) {
       }
       if (sd_current_status == STATUS_CONFIG_MODE) {
 
-        if (!_forced_config) {//if (Zigbee.started()) {
+        if (!_forced_config) {
         
           if (Supla::Storage::ConfigInstance()->setUInt8(
                 Z2S_FORCE_CONFIG_ON_START, 1)) {
@@ -455,8 +488,6 @@ void listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
 Supla::Device::StatusLed statusLed(RGB_BUILTIN, true);
 
 void setup() {
-  
-  //esp_log_set_vprintf(&spiffs_log_vprintf);
 
   log_i("setup start");
 
@@ -522,6 +553,7 @@ void setup() {
 
 #endif
 
+  Z2S_GatewayPreferences.begin("Z2S_GATEWAY", false);
   toggleNotifications = new Supla::Control::VirtualRelay();
   toggleNotifications->getChannel()->setChannelNumber(110);
   toggleNotifications->setInitialCaption("Gateway sensors notifications");
@@ -571,6 +603,23 @@ void setup() {
   }
 
   listDir(LittleFS,"/",3);
+  uint8_t file_test[1024] ;
+  
+  size_t ota_file_size = Z2S_getFileSize("main_ota_file.ota", false);
+  log_i("OTA file size %lu", ota_file_size);
+  
+  size_t ota_file_blocks = ota_file_size / 1024;
+  if (ota_file_size - (1024 * ota_file_blocks) > 0)
+    ota_file_blocks++;
+
+  for(size_t i = 0; i < ota_file_blocks; i++) {
+
+    size_t bytes_read = 
+      Z2S_loadBufferFromFile("main_ota_file.ota", i * 1024, 1024, file_test);
+    log_i("bytes read = %u", bytes_read);
+    //for (uint16_t j = 0; j < bytes_read; j++)
+    //  log_i("%02X", file_test[j]);
+  }
   LittleFS.end();
 
   Z2S_loadZbDevicesTable();
@@ -677,8 +726,24 @@ void setup() {
     Supla::Storage::ConfigInstance()->commit();
     Supla::Storage::ConfigInstance()->setInt32(Z2S_GUI_ON_START_DELAY_V2, 
 		  _gui_start_delay);
+		Supla::Storage::ConfigInstance()->commit();  
+  }
+
+  if (Supla::Storage::ConfigInstance()->getInt32(
+    Z2S_AUTO_CONNECTION_RESET_TIMEOUT, &_auto_connection_reset_timeout)) {
+
+    log_i(
+      "Z2S_AUTO_CONNECTION_RESET_TIMEOUT = %i s", 
+      _auto_connection_reset_timeout);
+  } else {
+
+    log_i(
+      "Z2S_AUTO_CONNECTION_RESET_TIMEOUT not configured - switching OFF");
+
+    _auto_connection_reset_timeout = 0;
+    Supla::Storage::ConfigInstance()->setInt32(
+      Z2S_AUTO_CONNECTION_RESET_TIMEOUT, _auto_connection_reset_timeout);
 		Supla::Storage::ConfigInstance()->commit();
-    
   }
 
   if (Supla::Storage::ConfigInstance()->
@@ -727,12 +792,16 @@ void setup() {
   SuplaDevice.setSwVersion(Z2S_VERSION);
   wifi.enableSSL(ENABLE_SSL);
 
-  SuplaDevice.setAutomaticResetOnConnectionProblem(300); //5 minutes
+  SuplaDevice.setAutomaticResetOnConnectionProblem(
+    _auto_connection_reset_timeout); 
+    
   //SuplaDevice.allowWorkInOfflineMode(2);
   SuplaDevice.setInitialMode(Supla::InitialMode::StartInCfgMode);
 
-  if ((_force_config_on_start) || 
-      (Supla::RegisterDevice::isEmailEmpty())) {
+  if (_force_config_on_start) {
+
+    log_i("starting Supla WebServer");
+    _start_Zigbee = false;
 
     SuplaDevice.setCustomHostnamePrefix("SUPLA-ZIGBEE-GATE");
 
@@ -839,13 +908,6 @@ void loop() {
     _forced_config = true;
     SuplaDevice.enterConfigMode();
   }
-
-  /*if ((!Z2S_isGUIStarted()) && 
-      SuplaDevice.getCurrentStatus() == STATUS_CONFIG_MODE) {
-  
-    Z2S_startWebGUIConfig();
-    Z2S_startUpdateServer();
-  }*/ 
 
   /*if (do_once) {
 
@@ -1034,9 +1096,22 @@ if (Z2S_isGUIStarted())
     _time_cluster_last_refresh_ms = millis();
   }
 
+  if (millis() - test_loop_ms > 1000) {
+
+    test_loop_ms = millis();
+    //if (Zigbee.started())
+      //msgZ2SDeviceIASzone(0, random(0,2));
+    //msgZ2SDeviceElectricityMeter(
+    //  1, Z2S_EM_ACT_FWD_ENERGY_A_DELTA_SEL, random(0,2));
+    /*log_i(
+      "\n\rsaved millis\t\t%llu\n\rcurrent millis\t\t%llu", 
+      Z2S_GatewayPreferences.getULong64("EM_EC_A"), test_loop_ms);
+
+    Z2S_GatewayPreferences.putULong64("EM_EC_A", test_loop_ms);*/
+  }
+
   if (millis() - refresh_time > REFRESH_PERIOD) {
 
-    
     if (refresh_cycle == 30) {
 
       log_i(
@@ -1165,12 +1240,8 @@ if (Z2S_isGUIStarted())
     while (!zbGateway.getJoinedDevices().empty()) {
 
       joined_device = zbGateway.getLastJoinedDevice();
-      
-      //rgbLed.setPixelColor(0, rgbLed.Color(0, 128, 128));
-      //rgbLed.show();
-      rgbLedWrite(RGB_BUILTIN, 0, 0, 255);  // Blue
 
-      //Z2S_stopWebGUI();
+      rgbLedWrite(RGB_BUILTIN, 0, 0, 255);  // Blue
 
       if (zpm->getState() == 2)
         zpm->notifySrpcAboutParingEnd(
@@ -1224,7 +1295,7 @@ if (Z2S_isGUIStarted())
                   Z2S_DEVICES_LIST[devices_list_counter].manufacturer_name) == 0)) {
 
               log_i("LIST matched %s::%s, entry # %d, endpoints # %d, "
-                    "endpoints 0x%x::0x%x,0x%x::0x%x,0x%x::0x%x,0x%x::0x%x",
+                    "endpoints 0x%x::0x%x,0x%x::0x%x,0x%x::0x%x",
                     Z2S_DEVICES_LIST[devices_list_counter].manufacturer_name, 
                     Z2S_DEVICES_LIST[devices_list_counter].model_name, 
                     devices_list_counter, 
@@ -1241,11 +1312,7 @@ if (Z2S_isGUIStarted())
                     Z2S_DEVICES_LIST[devices_list_counter].\
                       z2s_device_endpoints[2].endpoint_id, 
                     Z2S_DEVICES_LIST[devices_list_counter].\
-                      z2s_device_endpoints[2].z2s_device_desc_id,
-                    Z2S_DEVICES_LIST[devices_list_counter].\
-                      z2s_device_endpoints[3].endpoint_id, 
-                    Z2S_DEVICES_LIST[devices_list_counter].\
-                      z2s_device_endpoints[3].z2s_device_desc_id);
+                      z2s_device_endpoints[2].z2s_device_desc_id);
   
               for (uint8_t endpoint_counter = 0; 
                    endpoint_counter < Z2S_DEVICES_LIST[devices_list_counter].\
@@ -1259,6 +1326,18 @@ if (Z2S_isGUIStarted())
                     Z2S_DEVICE_CONFIG_FLAG_MIRROR_ALL_ENDPOINTS)
                   endpoint_idx = 0;
 
+                if (Z2S_DEVICES_LIST[devices_list_counter].\
+                      z2s_device_flags & 
+                    Z2S_DEVICE_CONFIG_FLAG_MIRROR_2_ENDPOINTS) {
+                  
+                  if (endpoint_counter < 
+                        Z2S_DEVICES_LIST[devices_list_counter].\
+                          z2s_device_endpoints_count_m1) 
+                    endpoint_idx = 0;
+                  else
+                    endpoint_idx = 1;
+                }
+
                 uint8_t endpoint_id = 
                   (Z2S_DEVICES_LIST[devices_list_counter].\
                     z2s_device_endpoints_count == 1) ? 
@@ -1271,6 +1350,20 @@ if (Z2S_isGUIStarted())
                       z2s_device_flags & 
                     Z2S_DEVICE_CONFIG_FLAG_MIRROR_ALL_ENDPOINTS)
                   endpoint_id += endpoint_counter; 
+
+                if (Z2S_DEVICES_LIST[devices_list_counter].\
+                      z2s_device_flags & 
+                    Z2S_DEVICE_CONFIG_FLAG_MIRROR_2_ENDPOINTS) {
+                  
+                  if (endpoint_counter < 
+                        Z2S_DEVICES_LIST[devices_list_counter].\
+                          z2s_device_endpoints_count_m1) 
+                    endpoint_id += endpoint_counter;
+                  else
+                    endpoint_id += (endpoint_counter - 
+                      Z2S_DEVICES_LIST[devices_list_counter].\
+                        z2s_device_endpoints_count_m1);
+                }
                                         
                 uint32_t z2s_device_desc_id = 
                   (Z2S_DEVICES_LIST[devices_list_counter].\
@@ -1287,7 +1380,7 @@ if (Z2S_isGUIStarted())
                   if (z2s_device_desc_id == 
                         Z2S_DEVICES_DESC[devices_desc_counter].\
                           z2s_device_desc_id) {
-                    log_i("DESC matched 0x%x, %d, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, endpoint 0x%x ",
+                    log_i("DESC matched 0x%x, %d, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, endpoint 0x%x ",
                           Z2S_DEVICES_DESC[devices_desc_counter].z2s_device_desc_id,   
                           Z2S_DEVICES_DESC[devices_desc_counter].z2s_device_clusters_count,
                           Z2S_DEVICES_DESC[devices_desc_counter].z2s_device_clusters[0],
@@ -1295,9 +1388,6 @@ if (Z2S_isGUIStarted())
                           Z2S_DEVICES_DESC[devices_desc_counter].z2s_device_clusters[2],
                           Z2S_DEVICES_DESC[devices_desc_counter].z2s_device_clusters[3],
                           Z2S_DEVICES_DESC[devices_desc_counter].z2s_device_clusters[4],
-                          Z2S_DEVICES_DESC[devices_desc_counter].z2s_device_clusters[5],
-                          Z2S_DEVICES_DESC[devices_desc_counter].z2s_device_clusters[6],
-                          Z2S_DEVICES_DESC[devices_desc_counter].z2s_device_clusters[7],
                           endpoint_id);
 
                     device_recognized = true;
@@ -1370,7 +1460,8 @@ if (Z2S_isGUIStarted())
                       case Z2S_DEVICE_DESC_IKEA_IAS_ZONE_SENSOR_1:
                       case Z2S_DEVICE_DESC_IKEA_IAS_ZONE_SENSOR_2:
                       case Z2S_DEVICE_DESC_TUYA_SIREN_ALARM:
-                      case Z2S_DEVICE_DESC_DEVELCO_IAS_ZONE_TEMP_SENSOR: {
+                      case Z2S_DEVICE_DESC_DEVELCO_IAS_ZONE_TEMP_SENSOR:
+                      case Z2S_DEVICE_DESC_TUYA_PIR_ILLUMINANCE_SENSOR: {
 
                         log_i("IAS ZONE sensor - clearing CIE ADDRESS");
                         

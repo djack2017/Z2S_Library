@@ -17,6 +17,12 @@
 
 #include "Z2S_local_action_handlers.h"
 
+HTTPClient https;
+
+WiFiClientSecure clientSec;
+
+extern bool force_leave_global_flag;
+
 
 //using Supla::LocalActionHandler;
 //using Supla::LocalActionHandlerWithTrigger;
@@ -335,6 +341,18 @@ void GatewayEvents::handleAction(int event, int action) {
       break;
 
 
+      case Z2S_SUPLA_ACTION_SET_FORCE_BIND_DEVICE:
+
+        force_leave_global_flag = true;
+      break;
+
+
+      case Z2S_SUPLA_ACTION_CLEAR_FORCE_BIND_DEVICE:
+
+        force_leave_global_flag = false;
+      break;
+
+
       case Z2S_SUPLA_ACTION_START_GUI_MINIMAL:
       case Z2S_SUPLA_ACTION_START_GUI_STANDARD:
 
@@ -484,6 +502,13 @@ void Supla::Control::LocalVirtualRelay::handleAction(int event, int action) {
 
   switch (action) {
 
+    
+    case Z2S_SUPLA_ACTION_TURN_OFF_RELAY_5_SECONDS:
+
+      turnOff(5000);
+    break;
+
+
     case Z2S_SUPLA_ACTION_RESEND_RELAY_STATE:
 
       if (state) 
@@ -499,6 +524,124 @@ void Supla::Control::LocalVirtualRelay::handleAction(int event, int action) {
     break;
   }
 }
+
+/*****************************************************************************/
+
+Supla::Control::SwitchBotRelay::SwitchBotRelay(uint8_t device_type_id):
+ Relay(-1, true, 0xFF ^ SUPLA_BIT_FUNC_CONTROLLINGTHEROLLERSHUTTER) {
+
+  _device_type_id = device_type_id;
+}
+
+/*****************************************************************************/
+
+void Supla::Control::SwitchBotRelay::onInit() {
+
+  initDone = true;
+  clientSec.setInsecure();
+}
+
+/*****************************************************************************/
+
+void Supla::Control::SwitchBotRelay::turnOn(_supla_int_t duration) {
+
+  char sb_url[128];
+    
+  //HTTPClient https;
+
+  sprintf(sb_url, sb_url_template, _sb_device_id.c_str());
+  
+  if (!https.connected())
+    https.begin(clientSec, sb_url);
+
+	https.addHeader("Content-Type", "application/json");
+	https.addHeader("Authorization", _sb_token);
+
+	int httpResponseCode = https.POST(_json_payload);
+
+  if (httpResponseCode == HTTP_CODE_OK)
+    log_i("HTTP_CODE_OK, response: %s", https.getString().c_str());
+  else
+    log_e("HTTP error: %s", https.errorToString(httpResponseCode).c_str());
+
+  clientSec.stop();
+  //https.end();
+
+  if (_device_type_id == SB_DEVICE_TYPE_ON_OFF_ID) {
+
+    _state = true;
+    channel.setNewValue(_state);
+    // Schedule save in 5 s after state change
+    Supla::Storage::ScheduleSave(5000);
+  }
+}
+
+/*****************************************************************************/
+
+void Supla::Control::SwitchBotRelay::turnOff(_supla_int_t duration) {
+
+  if (_device_type_id == SB_DEVICE_TYPE_ON_OFF_ID) {
+
+    char sb_url[128];
+    
+    //HTTPClient https;
+
+    sprintf(sb_url, sb_url_template, _sb_device_id.c_str());
+    
+    if (!https.connected())
+      https.begin(clientSec, sb_url);
+	  
+	  https.addHeader("Content-Type", "application/json");
+	  https.addHeader("Authorization", _sb_token);
+
+	  int httpResponseCode = https.POST(_json_payload_2);
+
+    if (httpResponseCode == HTTP_CODE_OK)
+      log_i("HTTP_CODE_OK, response: %s", https.getString().c_str());
+    else
+      log_e("HTTP error: %s", https.errorToString(httpResponseCode).c_str());
+
+    //https.end();
+    clientSec.stop();
+    
+    _state = false;
+    channel.setNewValue(_state);
+    // Schedule save in 5 s after state change
+    Supla::Storage::ScheduleSave(5000);
+  }
+}
+
+/*****************************************************************************/
+
+bool Supla::Control::SwitchBotRelay::updateSwitchBotData(
+  channel_extended_data_sb_t &channel_extended_data_sb, uint8_t direction) {
+
+    if (direction == SB_UPDATE_DATA_LOAD_DIR) {
+
+      _sb_device_id = channel_extended_data_sb.ble_mac_address;
+      _sb_token = channel_extended_data_sb.token;
+      _json_payload = channel_extended_data_sb.json_payload;
+      _json_payload_2 = channel_extended_data_sb.json_payload_2;
+      return true;
+    }
+    if (direction == SB_UPDATE_DATA_SAVE_DIR) {
+
+      strncpy(
+        channel_extended_data_sb.ble_mac_address, _sb_device_id.c_str(),
+        sizeof(channel_extended_data_sb.ble_mac_address));
+      strncpy(
+        channel_extended_data_sb.token, _sb_token.c_str(),
+        sizeof(channel_extended_data_sb.token));
+      strncpy(
+        channel_extended_data_sb.json_payload, _json_payload.c_str(),
+        sizeof(channel_extended_data_sb.json_payload));
+      strncpy(
+        channel_extended_data_sb.json_payload_2, _json_payload_2.c_str(),
+        sizeof(channel_extended_data_sb.json_payload_2));
+      return true;
+    }
+    return false;
+  }
 
 /*****************************************************************************/
 

@@ -25,17 +25,12 @@ namespace Sensor {
 
 class Z2S_ElectricityMeter : public ElectricityMeter {
  public:
-  Z2S_ElectricityMeter(ZigbeeGateway *gateway, 
-                       zbg_device_params_t *device, 
-                      bool isTuya, 
-		                  bool active_query = false, 
-                      bool one_phase = true) : 
+  Z2S_ElectricityMeter(
+    ZigbeeGateway *gateway, zbg_device_params_t *device, bool isTuya, 
+    bool active_query = false, bool one_phase = true) : 
     _gateway(gateway), _one_phase(one_phase) {
 	
     memcpy(&_device, device, sizeof(zbg_device_params_t));
-	
-    //_active_query = active_query;
-    //_isTuya       = isTuya;
 	
     if (active_query) 
       setRefreshSecs(30);
@@ -304,8 +299,9 @@ void setFreq2(uint32_t freq) {
   else
     em_freq = (freq * _ac_frequency_multiplier * 100) / _ac_frequency_divisor;
 
-  log_d("_ac_frequency_multiplier = %d, _ac_frequency_divisor = %d, em_freq = %ld", 
-        _ac_frequency_multiplier, _ac_frequency_divisor, em_freq);
+  log_d(
+    "_ac_frequency_multiplier = %d, _ac_frequency_divisor = %d, em_freq = %ld", 
+    _ac_frequency_multiplier, _ac_frequency_divisor, em_freq);
 
   setFreq(em_freq);
 }
@@ -323,6 +319,10 @@ void setFwdActEnergy2(int phase, unsigned _supla_int64_t energy) {
     energy -= total_forward_active_energy_counter[phase];
   else
     energy = 0;
+
+  log_d(
+    "_energy_multiplier = %d, _energy_divisor = %d, energy = %lld", 
+    _energy_multiplier, _energy_divisor, energy);
 
   setFwdActEnergy(phase, energy);
 }
@@ -354,7 +354,7 @@ void setFwdBalancedEnergy2(uint64_t energy) {
     setFwdActEnergy2(0, energy);
     return;
   } else
-    return; //temporary solution
+    return; //temporary solution/
 
   if ((_energy_multiplier != 0) && (_energy_divisor != 0))
     energy = (energy * _energy_multiplier * 100000) / _energy_divisor;

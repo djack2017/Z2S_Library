@@ -18,6 +18,9 @@
 #define LOCAL_ACTION_HANDLERS_H
 
 #include <Arduino.h>
+#include <HTTPClient.h>
+#include <WiFiClientSecure.h>
+
 #include <ZigbeeGateway.h>
 #include <SuplaDevice.h>
 //#include <supla/storage/storage.h>
@@ -31,6 +34,8 @@
 #include <supla/control/virtual_relay.h>
 #include <supla/sensor/virtual_binary.h>
 #include <supla/device/notifications.h>
+#include <supla/log_wrapper.h>
+#include <supla/storage/storage.h>
 
 #include "Z2S_custom_actions_events.h"
 
@@ -50,10 +55,34 @@
 #define LAVB_ROTATE_RIGHT_FUNC        0x04
 #define LAVB_ROTATE_LEFT_FUNC         0x05
 
-extern bool sendIASNotifications;
-extern Supla::Control::VirtualRelay *toggleNotifications;
+#define CHANNEL_EXTENDED_DATA_TYPE_SB 0x10
+
+#define SB_UPDATE_DATA_LOAD_DIR       0x00
+#define SB_UPDATE_DATA_SAVE_DIR       0x01
+
+#define SB_DEVICE_TYPE_PRESS_ID       0x00
+#define SB_DEVICE_TYPE_ON_OFF_ID      0x01
 
 typedef void (*_actionhandler_callback)(int event, int action);
+
+typedef struct channel_extended_data_sb_s {
+
+  uint8_t device_id;
+  uint16_t device_flags; //???
+  char  ble_mac_address[13]; 
+  uint32_t token_size; //not used
+  char token[128];
+  uint16_t json_payload_size;
+  uint16_t json_payload_2_size;
+  char json_payload[256];
+  char json_payload_2[256];
+} __attribute__ ((packed)) channel_extended_data_sb_t;
+
+static const char *sb_url_template = 
+    "https://api.switch-bot.com/v1.1/devices/%s/commands";
+
+extern bool sendIASNotifications;
+extern Supla::Control::VirtualRelay *toggleNotifications;
 
 namespace Supla {
 
@@ -177,6 +206,31 @@ class LocalVirtualRelay: public VirtualRelay {
 
     virtual ~LocalVirtualRelay();
     void handleAction(int event, int action) override; 
+};
+
+class SwitchBotRelay: public Relay {
+
+  public:
+
+    SwitchBotRelay(uint8_t device_type_id = SB_DEVICE_TYPE_PRESS_ID);
+
+    void onInit() override;
+
+    bool updateSwitchBotData(
+      channel_extended_data_sb_t &channel_extended_data_sb, uint8_t direction);
+
+    void turnOn(_supla_int_t duration = 0) override;
+    void turnOff(_supla_int_t duration = 0) override;
+  
+  protected:
+    String _sb_device_id;
+    String _sb_token;
+    String _json_payload;
+    String _json_payload_2;
+    uint8_t _device_type_id = SB_DEVICE_TYPE_PRESS_ID;
+    //HTTPClient https;
+    bool _state;
+    //bool _connected = false;
 };
 }; //namespace Control
 

@@ -113,7 +113,9 @@ static constexpr char* GUI_MODE_OPTIONS[] PROGMEM = {
 	"Gateway + TCC",
 	"Gateway + C&A + TCC",
 	"Gateway + Devices + Channels",
-	"Gateway + Zigbee + Devices + Channels + C&A + TCC"
+	"Gateway + Zigbee + Devices + Channels + C&A + TCC",
+	"Full GUI + AD",
+	"Full GUI + SB"
 };
 
 static constexpr zigbee_cluster_t zigbee_clusters[] PROGMEM = {
@@ -421,11 +423,20 @@ static constexpr Supla_action_type_t Supla_actions [] PROGMEM = {
 	{ .Supla_action_id = (Supla::Action)Z2S_SUPLA_ACTION_RESYNC_REMOTE_RELAY,
 		.Supla_action_name = "RESYNC REMOTE RELAY" },
 
+{ .Supla_action_id = (Supla::Action)Z2S_SUPLA_ACTION_TURN_OFF_RELAY_5_SECONDS,
+		.Supla_action_name = "TURN OFF RELAY FOR 5 SECONDS" },
+
 	{ .Supla_action_id = (Supla::Action)Z2S_SUPLA_ACTION_OPEN_ZIGBEE_NETWORK,
 		.Supla_action_name = "START ZIGBEE PAIRING" },
 
 	{ .Supla_action_id = (Supla::Action)Z2S_SUPLA_ACTION_CLOSE_ZIGBEE_NETWORK,
 		.Supla_action_name = "CLOSE ZIGBEE PAIRING" },
+
+	{ .Supla_action_id = (Supla::Action)Z2S_SUPLA_ACTION_SET_FORCE_BIND_DEVICE,
+		.Supla_action_name = "SET FORCE DEVICE TO BIND GATEWAY" },
+
+	{ .Supla_action_id = (Supla::Action)Z2S_SUPLA_ACTION_CLEAR_FORCE_BIND_DEVICE,
+		.Supla_action_name = "CLEAR FORCE DEVICE TO BIND GATEWAY" },
 
 	{ .Supla_action_id = (Supla::Action)Z2S_SUPLA_ACTION_START_GUI_MINIMAL,
 		.Supla_action_name = "START GUI (MINIMAL)" },
@@ -2783,13 +2794,59 @@ static const Tuya_datapoint_desc_t Tuya_datapoints[] PROGMEM = {
     .Tuya_datapoint_name 	 			= "Fading time",
     .Tuya_datapoint_description = "Enter numeric value: 5 - 1500 [s]/step 5 [s]" },
 
+	{ .z2s_device_desc_id 	 			= Z2S_DEVICE_DESC_TUYA_PRESENCE_SENSOR_SZLR08T,
+    .Tuya_datapoint_id 		 			= TUYA_PRESENCE_SENSOR_SZLR08T_DETECTION_RANGE_DP,
+    .Tuya_datapoint_type 				= TUYA_DP_TYPE_VALUE,
+    .Tuya_datapoint_name 	 			= "Detection range",
+    .Tuya_datapoint_description = "Enter numeric value: 0 - 600 [cm]" },
+
+	{ .z2s_device_desc_id 	 			= Z2S_DEVICE_DESC_TUYA_PRESENCE_SENSOR_SZLR08T,
+    .Tuya_datapoint_id 		 			= TUYA_PRESENCE_SENSOR_SZLR08T_RADAR_SENSITIVITY_DP,
+    .Tuya_datapoint_type 				= TUYA_DP_TYPE_VALUE,
+    .Tuya_datapoint_name 	 			= "Radar sensitivity",
+    .Tuya_datapoint_description = "Enter numeric value: 0 - 9" },
+
+	{ .z2s_device_desc_id 	 			= Z2S_DEVICE_DESC_TUYA_PRESENCE_SENSOR_SZLR08T,
+    .Tuya_datapoint_id 		 			= TUYA_PRESENCE_SENSOR_SZLR08T_FADING_TIME_DP,
+    .Tuya_datapoint_type 				= TUYA_DP_TYPE_VALUE,
+    .Tuya_datapoint_name 	 			= "Fading time",
+    .Tuya_datapoint_description = "Enter numeric value: 5 - 300 [s]/step 1 [s]" },
+
+	{ .z2s_device_desc_id 	 			= Z2S_DEVICE_DESC_TUYA_PRESENCE_SENSOR_SZLR08T,
+    .Tuya_datapoint_id 		 			= TUYA_PRESENCE_SENSOR_SZLR08T_RADAR_SWITCH_DP,
+    .Tuya_datapoint_type 				= TUYA_DP_TYPE_BOOL,
+    .Tuya_datapoint_name 	 			= "Radar switch (notifications off/on)",
+    .Tuya_datapoint_description = "Enter numeric value: 0 (OFF) or 1(ON)" },
+
+	{ .z2s_device_desc_id 	 			= Z2S_DEVICE_DESC_TUYA_PRESENCE_SENSOR_SZLR08T,
+    .Tuya_datapoint_id 		 			= TUYA_PRESENCE_SENSOR_SZLR08T_LED_INDICATOR_DP,
+    .Tuya_datapoint_type 				= TUYA_DP_TYPE_BOOL,
+    .Tuya_datapoint_name 	 			= "LED indicator (off/on)",
+    .Tuya_datapoint_description = "Enter numeric value: 0 (OFF) or 1(ON)" },
+
+	{ .z2s_device_desc_id 	 			= Z2S_DEVICE_DESC_TUYA_PRESENCE_SENSOR_SZLR08T,
+    .Tuya_datapoint_id 		 			= TUYA_PRESENCE_SENSOR_SZLR08T_RELAY_MODE_DP,
+    .Tuya_datapoint_type 				= TUYA_DP_TYPE_ENUM,
+    .Tuya_datapoint_name 	 			= "Relay mode",
+    .Tuya_datapoint_description = "Enter numeric value:<br>"
+																	"0 => AUTO<br>"
+																	"1 => MANUAL"},
+
+	{ .z2s_device_desc_id 	 			= Z2S_DEVICE_DESC_TUYA_PRESENCE_SENSOR_SZLR08T,
+    .Tuya_datapoint_id 		 			= TUYA_PRESENCE_SENSOR_SZLR08T_RADAR_MODE_DP,
+    .Tuya_datapoint_type 				= TUYA_DP_TYPE_ENUM,
+    .Tuya_datapoint_name 	 			= "Radar mode",
+    .Tuya_datapoint_description = "Enter numeric value:<br>"
+																	"0 => PEOPLE ON<br>"
+																	"1 => PEOPLE OFF"},
+
 	{ .z2s_device_desc_id 	 			= Z2S_DEVICE_DESC_TS0601_TRV_TRV602Z,
     .Tuya_datapoint_id 		 			= TUYA_TS0601_TRV_TRV602Z_MOTOR_THRUST_DP,
     .Tuya_datapoint_type 				= TUYA_DP_TYPE_ENUM,
     .Tuya_datapoint_name 	 			= "Motor thrust",
     .Tuya_datapoint_description = "Enter numeric value:<br>"
 																	"0 => strong<br>"
-																	"1 => middle"
+																	"1 => middle<br>"
 																	"2 => weak" },
 
 	{ .z2s_device_desc_id 	 			= Z2S_DEVICE_DESC_TS0601_TRV_TRV602Z,
@@ -2798,7 +2855,7 @@ static const Tuya_datapoint_desc_t Tuya_datapoints[] PROGMEM = {
     .Tuya_datapoint_name 	 			= "Display brightness",
     .Tuya_datapoint_description = "Enter numeric value:<br>"
 																	"0 => high<br>"
-																	"1 => medium"
+																	"1 => medium<br>"
 																	"2 => low" },
 
 	{ .z2s_device_desc_id 	 			= Z2S_DEVICE_DESC_TS0601_TRV_TRV602Z,

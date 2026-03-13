@@ -75,6 +75,10 @@ union {
   
     };
     struct {
+      uint32_t        fwd_energy_buffer;
+      uint32_t        fwd_energy_timer;
+    };
+    struct {
       uint32_t        rain_intensity_treshold;
     };
     struct {
@@ -109,7 +113,10 @@ union {
   };
   uint32_t            user_data_flags;
   uint32_t            timeout_secs;
+union {
   uint32_t            keep_alive_secs;
+  uint32_t            action_trigger_hold_ms;
+};
 union {  
   uint32_t            refresh_secs;
   uint32_t            debounce_ms;
@@ -117,6 +124,12 @@ union {
 union {
   struct {
     uint64_t          data_counter;
+  };
+  struct {
+    int64_t           fwd_energy_counter;
+  };
+  struct {
+    char              extended_data_counter[8];
   };
   struct {
       uint32_t        last_temperature_measurement;//TEMP*100

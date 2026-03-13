@@ -14,9 +14,16 @@
 
 #define Z2S_SUPLA_ACTION_OPEN_ZIGBEE_NETWORK              0x4100
 #define Z2S_SUPLA_ACTION_CLOSE_ZIGBEE_NETWORK             0x4101
+#define Z2S_SUPLA_ACTION_SET_FORCE_BIND_DEVICE            0x4105
+#define Z2S_SUPLA_ACTION_CLEAR_FORCE_BIND_DEVICE          0x4106
 
 #define Z2S_SUPLA_ACTION_START_GUI_MINIMAL                0x4200
 #define Z2S_SUPLA_ACTION_START_GUI_STANDARD               0x4201
+
+#define Z2S_SUPLA_ACTION_DIM_W                            0x4500
+#define Z2S_SUPLA_ACTION_DIM_W_5                          0x4501
+#define Z2S_SUPLA_ACTION_DIM_W_15                         0x4502
+#define Z2S_SUPLA_ACTION_DIM_W_20                         0x4503
 
 #define Z2S_SUPLA_ACTION_TURN_ON_MAX_TEMPERATURE          0x5000
 #define Z2S_SUPLA_ACTION_TURN_ON_MIN_TEMPERATURE          0x5001
@@ -24,6 +31,8 @@
 #define Z2S_SUPLA_ACTION_RESEND_RELAY_STATE               0x5100
 #define Z2S_SUPLA_ACTION_SET_RELAY_STATE_DISABLED         0x5101
 #define Z2S_SUPLA_ACTION_RESYNC_REMOTE_RELAY              0x5102
+
+#define Z2S_SUPLA_ACTION_TURN_OFF_RELAY_5_SECONDS         0x5110
 
 #define Z2S_SUPLA_EVENT_BASE                              0x4000
 
