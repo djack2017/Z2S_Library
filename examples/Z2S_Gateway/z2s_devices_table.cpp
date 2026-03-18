@@ -5348,9 +5348,9 @@ void Z2S_onBatteryReceive(
   log_i(
     "short adddress 0x%04X, endpoint 0x%x, cluster 0x%x, battery 0x%x", 
     short_addr, endpoint, cluster, battery_remaining);
-  printf("short adddress 0x%04X\n", short_addr);
-  printf("endpoint 0x%x\n", endpoint);
-  printf("cluster 0x%x\n", cluster);
+//  printf("short adddress 0x%04X\n", short_addr);
+//  printf("endpoint 0x%x\n", endpoint);
+//  printf("cluster 0x%x\n", cluster);
   printf("battery 0x%x\n", battery_remaining);
 
   int16_t channel_number_slot = Z2S_findChannelNumberSlot(
