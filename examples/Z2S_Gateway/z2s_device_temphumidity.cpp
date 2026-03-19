@@ -331,7 +331,7 @@ void msgZ2SDeviceTempHumidityHumi(int16_t channel_number_slot, double humi) {
 		snprintf(xlevel, sizeof(xlevel), "%d", (int)(level));
 		printf("Humi: %s\n", xhumi);
 		sprintf(key, "hum");
-		sprintf(key, "bat");
+		sprintf(key1, "bat");
 		if (strncmp(z2s_channels_table[channel_number_slot].Supla_channel_name, "z_", 2) == 0) {
 		  char *name = z2s_channels_table[channel_number_slot].Supla_channel_name;
 		  char *pos = strchr(name, '_');
