@@ -338,7 +338,7 @@ void msgZ2SDeviceTempHumidityHumi(int16_t channel_number_slot, double humi) {
 		  if (pos != NULL) {
 		    char hostname[32];
 		    strcpy(hostname, pos + 1);
-			if ((level>0 and (level<255))
+			if ((level>0) and (level<255))
 				zabbix_send2(hostname, key, xhumi, key1, xlevel);
 			else		
 				zabbix_send(hostname, key, xhumi);
