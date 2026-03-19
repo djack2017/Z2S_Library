@@ -287,7 +287,9 @@ void msgZ2SDeviceTempHumidityTemp(
 void msgZ2SDeviceTempHumidityHumi(int16_t channel_number_slot, double humi) {
 
   char xhumi[6];
+  char xlevel[4];
   char key[6];
+  char key1[6];
 
   if (channel_number_slot < 0) {
     log_e("msgZ2SDeviceTempHumidityHumi - invalid channel number slot");
@@ -324,23 +326,22 @@ void msgZ2SDeviceTempHumidityHumi(int16_t channel_number_slot, double humi) {
 		if (element) {
 			level = element->getChannel()->getBatteryLevel();
 		}
-		
-		uint8_t zb_device_number_slot = Z2S_findZbDeviceTableSlot(z2s_channels_table[channel_number_slot].ieee_addr);
-		uint8_t battery_percentage = z2s_zb_devices_table[zb_device_number_slot].battery_percentage;
-		printf("channel_number_slot: %d\n", channel_number_slot);
-		printf("zb_device_number_slot: %d\n", zb_device_number_slot);
-		printf("Battery: %d\n", level);
-		
+//		printf("Battery: %d\n", level);
 		snprintf(xhumi, sizeof(xhumi), "%d", (int)(10*humi));
+		snprintf(xlevel, sizeof(xlevel), "%d", (int)(level));
 		printf("Humi: %s\n", xhumi);
 		sprintf(key, "hum");
+		sprintf(key, "bat");
 		if (strncmp(z2s_channels_table[channel_number_slot].Supla_channel_name, "z_", 2) == 0) {
 		  char *name = z2s_channels_table[channel_number_slot].Supla_channel_name;
 		  char *pos = strchr(name, '_');
 		  if (pos != NULL) {
 		    char hostname[32];
 		    strcpy(hostname, pos + 1);
-		    zabbix_send(hostname, key, xhumi);
+			if ((level>0 and (level<255))
+				zabbix_send2(hostname, key, xhumi, key1, xlevel);
+			else		
+				zabbix_send(hostname, key, xhumi);
 		  }
 		}
 	}

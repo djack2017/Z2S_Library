@@ -9263,13 +9263,8 @@ void updateSuplaBatteryLevel(
     if (element) {
       
       if ((battery_level < 0xFF) && 
-          !Z2S_checkChannelFlags(
-            channel_number_slot,USER_DATA_FLAG_IGNORE_CHANNEL_BATTERY_LEVEL))
-			{
-				printf(">> channel_number_slot: %d\n", channel_number_slot);
-				printf(">> battery: %d\n", battery_level);
-				element->getChannel()->setBatteryLevel(battery_level);
-			}
+          !Z2S_checkChannelFlags(channel_number_slot,USER_DATA_FLAG_IGNORE_CHANNEL_BATTERY_LEVEL))
+        element->getChannel()->setBatteryLevel(battery_level);
 
         if (restore)
           break; //only actual channel since rest will be scanned anyway in initSuplaChannels()
