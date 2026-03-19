@@ -321,7 +321,7 @@ void msgZ2SDeviceTempHumidityHumi(int16_t channel_number_slot, double humi) {
 
 		uint8_t zb_device_number_slot = Z2S_findZbDeviceTableSlot(z2s_channels_table[channel_number_slot].ieee_addr);
 		uint8_t battery_percentage = z2s_zb_devices_table[zb_device_number_slot].battery_percentage;
-		printf("short_addr: %d\n", short_addr);
+		printf("channel_number_slot: %d\n", channel_number_slot);
 		printf("zb_device_number_slot: %d\n", zb_device_number_slot);
 		printf("Battery: %d\n", battery_percentage);
 		
