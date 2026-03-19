@@ -319,9 +319,10 @@ void msgZ2SDeviceTempHumidityHumi(int16_t channel_number_slot, double humi) {
 	int8_t device_slot = findDeviceSlotByShortAddr(z2s_channels_table[channel_number_slot].short_addr);
 	if (device_slot >=0) {
 
-		auto element = Supla::Element::getElementByChannelNumber(channel_number_slot);
+		uint8_t level = 0;
+		auto element = Supla::Element::getElementByChannelNumber(z2s_channels_table[channel_number_slot].Supla_channel);
 		if (element) {
-			uint8_t level = element->getChannel()->getBatteryLevel();
+			level = element->getChannel()->getBatteryLevel();
 		}
 		
 		uint8_t zb_device_number_slot = Z2S_findZbDeviceTableSlot(z2s_channels_table[channel_number_slot].ieee_addr);
